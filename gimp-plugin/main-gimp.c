@@ -81,7 +81,7 @@ static void input_parameters_fetch_params(const GimpParam *param);
 static void input_parameters_fetch_dlg();
 static void image_parameters_init(const GimpParam *param);
 static void image_parameters_destroy();
-static void hopfield_data_init();
+static int  hopfield_data_init();
 static void hopfield_data_destroy();
 static void hopfield_data_load();
 static void hopfield_data_save();
@@ -564,38 +564,44 @@ static void preview_parameters_init()
 	preview.size   = preview.width * preview.height;
 }
 
-static void hopfield_data_init()
-{
-	switch (image_parameters.img_bpp)
-	{
-	case 1:
-	case 2:
-		image_create(&hopfield.imageR, image_parameters.sel_width, image_parameters.sel_height);
-		break;
-	case 3:
-	case 4:
-		image_create(&hopfield.imageR, image_parameters.sel_width, image_parameters.sel_height);
-		image_create(&hopfield.imageG, image_parameters.sel_width, image_parameters.sel_height);
-		image_create(&hopfield.imageB, image_parameters.sel_width, image_parameters.sel_height);
-		break;
-	}
+static int hopfield_data_init() {
+  switch (image_parameters.img_bpp) {
+  case 1:
+  case 2:
+    if (!(image_create(&hopfield.imageR, image_parameters.sel_width, image_parameters.sel_height)))
+      goto hopfield_data_init_err0;
+    break;
+  case 3:
+  case 4:
+    if (!(image_create(&hopfield.imageR, image_parameters.sel_width, image_parameters.sel_height)))
+      goto hopfield_data_init_err0;
+    if (!(image_create(&hopfield.imageG, image_parameters.sel_width, image_parameters.sel_height)))
+      goto hopfield_data_init_err1;
+    if (!(image_create(&hopfield.imageB, image_parameters.sel_width, image_parameters.sel_height)))
+      goto hopfield_data_init_err2;
+    break;
+  }
+  return 0;
+
+hopfield_data_init_err2:
+  image_destroy(&hopfield.imageG);
+hopfield_data_init_err1:
+  image_destroy(&hopfield.imageR);
+hopfield_data_init_err0:
+  return 1;
 }
 
-static void hopfield_data_destroy()
-{
-	switch (image_parameters.img_bpp)
-	{
-	case 1:
-	case 2:
-		image_destroy(&hopfield.imageR);
-		break;
-	case 3:
-	case 4:
-		image_destroy(&hopfield.imageR);
-		image_destroy(&hopfield.imageG);
-		image_destroy(&hopfield.imageB);
-		break;
-	}
+static void hopfield_data_destroy() {
+  switch (image_parameters.img_bpp) {
+  case 4:
+  case 3:
+    image_destroy(&hopfield.imageB);
+    image_destroy(&hopfield.imageG);
+  case 2:
+  case 1:
+    image_destroy(&hopfield.imageR);
+    break;
+  }
 }
 
 static void hopfield_data_save()
@@ -1283,15 +1289,15 @@ static void compute(int iterations)
 		blur_create_gauss(&hopfield.filter, R(1.0));
 		lambda_set_mirror(&hopfield.lambdafldR, is_mirror);
 		lambda_set_nl(&hopfield.lambdafldR, TRUE);
-		lambda_create(&hopfield.lambdafldR, image_parameters.sel_width, image_parameters.sel_height, lambda_min, input_parameters.winsize, &hopfield.filter);
+		lambda_create(&hopfield.lambdafldR, image_parameters.sel_width, image_parameters.sel_height, lambda_min, input_parameters.winsize, &hopfield.filter); //memfull?
 		if (is_rgb)
 		{
 			lambda_set_mirror(&hopfield.lambdafldG, is_mirror);
 			lambda_set_mirror(&hopfield.lambdafldB, is_mirror);
 			lambda_set_nl(&hopfield.lambdafldG, TRUE);
 			lambda_set_nl(&hopfield.lambdafldB, TRUE);
-			lambda_create(&hopfield.lambdafldG, image_parameters.sel_width, image_parameters.sel_height, lambda_min, input_parameters.winsize, &hopfield.filter);
-			lambda_create(&hopfield.lambdafldB, image_parameters.sel_width, image_parameters.sel_height, lambda_min, input_parameters.winsize, &hopfield.filter);
+			lambda_create(&hopfield.lambdafldG, image_parameters.sel_width, image_parameters.sel_height, lambda_min, input_parameters.winsize, &hopfield.filter); //memfull?
+			lambda_create(&hopfield.lambdafldB, image_parameters.sel_width, image_parameters.sel_height, lambda_min, input_parameters.winsize, &hopfield.filter); //memfull?
 		}
 	}
 
@@ -1425,7 +1431,7 @@ run (const gchar *name, gint nparams, const GimpParam *param, gint *nreturn_vals
 
 	input_parameters_init();
 	image_parameters_init(param);
-	hopfield_data_init();
+	hopfield_data_init();  //memfull?
 	hopfield_data_load();
 
 	/*

@@ -21,7 +21,7 @@
 #define _COMPILER_CONF_H
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include "refocus-it-config.h"
 #endif
 
 #include <math.h>

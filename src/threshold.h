@@ -27,42 +27,15 @@
 C_DECL_BEGIN
 
 typedef struct {
-	int x;
-	int y;
-	real_t *data;
+  int x;
+  int y;
+  real_t *data;
 } threshold_t;
-
 
 threshold_t* threshold_create_mirror(threshold_t* threshold, convmask_t* convmask, image_t* image);
 threshold_t* threshold_create_period(threshold_t* threshold, convmask_t* convmask, image_t* image);
 void threshold_destroy(threshold_t* threshold);
-
-/*
-* GET / SET
-*/
-
-#define MACRO_THRESHOLD_GET(t, c, r) ((t)->data[(r) * (t)->x + (c)])
-
-#if defined(USE_INLINES)
-
-#if defined(INLINE)
-
-static INLINE real_t threshold_get(threshold_t* threshold, int x, int y)
-{
-	return MACRO_THRESHOLD_GET(threshold, x, y);
-}
-
-#else
-
 real_t threshold_get(threshold_t* threshold, int x, int y);
-
-#endif
-
-#else
-
-#define threshold_get(t, c, r) MACRO_THRESHOLD_GET(t, c, r)
-
-#endif
 
 C_DECL_END
 

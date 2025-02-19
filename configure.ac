@@ -17,10 +17,10 @@ m4_define([plugin_package_email], [https://github.com/JoesCat/gimp-refocus-it/is
 AC_INIT([plugin_name], [plugin_version], [plugin_package_email],
 	[plugin_package_name], [plugin_package_home])
 
-AC_DEFINE(PLUGIN_NAME, [plugin_name], [Plug-In name])
+AC_DEFINE(PLUGIN_NAME, ["plugin_name"], [Plug-In name])
 AC_DEFINE(PLUGIN_EMAIL, [plugin_package_email], [Plug-In package email])
-AC_DEFINE(PACKAGE_NAME, [plugin_package_name], [Plug-In Package name])
-AC_DEFINE(PLUGIN_VERSION, PACKAGE_VERSION, [Plug-In version])
+AC_DEFINE(PACKAGE_NAME, ["plugin_package_name"], [Plug-In Package name])
+AC_DEFINE(PLUGIN_VERSION, ["plugin_version"], [Plug-In version])
 
 AC_DEFINE(PLUGIN_MAJOR_VERSION, plugin_major_version, [Plug-In major version])
 AC_DEFINE(PLUGIN_MINOR_VERSION, plugin_minor_version, [Plug-In minor version])
@@ -201,6 +201,7 @@ AC_CONFIG_FILES([
 Makefile
 po/Makefile
 src/Makefile
+gimp-plugin/Makefile
 ])
 
 AC_OUTPUT

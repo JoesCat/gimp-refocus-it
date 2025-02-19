@@ -20,7 +20,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "xmalloc.h"
 #include "image.h"
 
 #define LINE_LEN_BORDER_PPM 56
@@ -40,16 +39,18 @@ image_t* image_create(image_t* image, int x, int y)
 {
   image->x = x;
   image->y = y;
-  image->data = (real_t*)xmalloc(sizeof(real_t) * x * y);
-  return image;
+  if ((image->data = (real_t*)malloc(sizeof(real_t) * x * y)))
+    return image;
+  return NULL;
 }
 
 image_t* image_create_copyparam(image_t* image, image_t* src)
 {
   image->x = src->x;
   image->y = src->y;
-  image->data = (real_t*)xmalloc(sizeof(real_t) * image->x * image->y);
-  return image;
+  if ((image->data = (real_t*)malloc(sizeof(real_t) * image->x * image->y)))
+    return image;
+  return NULL;
 }
 
 void image_init(image_t* image)
@@ -59,7 +60,7 @@ void image_init(image_t* image)
 
 void image_destroy(image_t* image)
 {
-  xfree(image->data);
+  free(image->data);
 }
 
 image_t* image_convolve_mirror(image_t* dst, image_t* src, convmask_t* filter)

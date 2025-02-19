@@ -18,7 +18,6 @@
  */
 
 #include <stdlib.h>
-#include "xmalloc.h"
 #include "lambda.h"
 
 static void get_variance_mirror(image_t* variance, image_t* img, real_t* pmin, real_t* pmax, int winsize)
@@ -108,23 +107,25 @@ lambda_t* lambda_create(lambda_t* lambda, int x, int y, real_t minlambda, int wi
   lambda->minlambda = minlambda;
   lambda->winsize = winsize;
   lambda->filter = filter;
-  lambda->lambda = (real_t*)xmalloc(sizeof(real_t) * x * y);
-  return lambda;
+  if ((lambda->lambda = (real_t*)malloc(sizeof(real_t) * x * y)))
+    return lambda;
+  /* out of memory, return NULL */
+  return NULL;
 }
 
 void lambda_destroy(lambda_t* lambda)
 {
-  xfree(lambda->lambda);
+  free(lambda->lambda);
 }
 
 void lambda_set_mirror(lambda_t* lambda, int mirror)
 {
-	lambda->mirror = mirror;
+  lambda->mirror = mirror;
 }
 
 void lambda_set_nl(lambda_t* lambda, int nl)
 {
-	lambda->nl = nl;
+  lambda->nl = nl;
 }
 
 lambda_t* lambda_calculate_period(lambda_t* lambda, image_t* image)
@@ -284,16 +285,16 @@ lambda_t* lambda_calculate_mirror_nl(lambda_t* lambda, image_t* image)
 
 lambda_t* lambda_calculate(lambda_t* lambda, image_t* image)
 {
-	if (lambda->mirror)
-	{
-		if (lambda->nl) return lambda_calculate_mirror_nl(lambda, image);
-		else return lambda_calculate_mirror(lambda, image);
-	}
-	else
-	{
-		if (lambda->nl) return lambda_calculate_period_nl(lambda, image);
-		else return lambda_calculate_period(lambda, image);
-	}
+  if (lambda->mirror)
+  {
+    if (lambda->nl) return lambda_calculate_mirror_nl(lambda, image);
+    else return lambda_calculate_mirror(lambda, image);
+  }
+  else
+  {
+    if (lambda->nl) return lambda_calculate_period_nl(lambda, image);
+    else return lambda_calculate_period(lambda, image);
+  }
 }
 
 

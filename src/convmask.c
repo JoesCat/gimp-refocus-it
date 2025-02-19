@@ -18,7 +18,6 @@
  */
 
 #include <stdlib.h>
-#include "xmalloc.h"
 #include "convmask.h"
 
 convmask_t* convmask_create(convmask_t* convmask, int radius)
@@ -28,8 +27,10 @@ convmask_t* convmask_create(convmask_t* convmask, int radius)
   radius += 1;
   convmask->r21 = radius;
   convmask->speeder = convmask->radius * (convmask->r21 + 1);
-  convmask->coef = xmalloc(sizeof(real_t) * radius * radius);
-  return convmask;
+  if ((convmask->coef = malloc(sizeof(real_t) * radius * radius)))
+    return convmask;
+  /* out of memory, returm NULL */
+  return NULL;
 }
 
 
@@ -39,8 +40,13 @@ convmask_t* convmask_convolve(convmask_t* ct, convmask_t* c1, convmask_t* c2)
   real_t sum;
   convmask_t ctmp;
 
-  convmask_create(ct, c1->radius + c2->radius);
-  convmask_create(&ctmp, c1->radius + c2->radius);
+  if (!(convmask_create(ct, c1->radius + c2->radius)))
+    return NULL;
+  if (!(convmask_create(&ctmp, c1->radius + c2->radius)))
+  {
+    convmask_destroy(ct);
+    return NULL;
+  };
 
   r = ctmp.r21 * ctmp.r21;
   for (x = 0; x < r; x++)
@@ -81,7 +87,7 @@ convmask_t* convmask_convolve(convmask_t* ct, convmask_t* c1, convmask_t* c2)
 
 void convmask_destroy(convmask_t* convmask)
 {
-  xfree(convmask->coef);
+  free(convmask->coef);
 }
 
 void convmask_set_circle(convmask_t* convmask, int i, int j, real_t value)
@@ -116,7 +122,7 @@ void convmask_print(convmask_t* convmask, FILE* file)
     {
       fprintf(file, "%1.4f ", (float)convmask_get(convmask, j, i));
     }
-	fprintf(file, "\n");
+    fprintf(file, "\n");
   }
 }
 

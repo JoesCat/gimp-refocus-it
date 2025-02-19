@@ -133,7 +133,7 @@ convmask_t* blur_create_defocus(convmask_t* blur, real_t radius)
 	real_t val;
 
 	r = (int)(radius + R(0.5));
-	convmask_create(blur, r);
+	convmask_create(blur, r); //memfull?
 
 	if (r < 1)
 	{
@@ -165,7 +165,7 @@ convmask_t* blur_create_gauss(convmask_t* blur, real_t variance)
 
 	if (variance < R(1e-6))
 	{
-		convmask_create(blur, 0);
+		convmask_create(blur, 0); //memfull?
 		convmask_set(blur, 0, 0, R(1.0));
 		return blur;
 	}
@@ -178,7 +178,7 @@ convmask_t* blur_create_gauss(convmask_t* blur, real_t variance)
 		var = (double)variance;
 		epsilon = sqrt(-2.0 * log(1e-2));
 		radius = (int)(var * epsilon + 0.5);
-		convmask_create(blur, radius);
+		convmask_create(blur, radius); //memfull?
 		var *= var * 2.0;
 		mult = var * M_PI;
 		for (i = 0; i <= radius; i++) {
@@ -321,14 +321,14 @@ convmask_t* blur_create_motion(convmask_t* blur, real_t radius, real_t angle)
 
 	if (radius < R(1e-4))
 	{
-		convmask_create(blur, 0.01);
+		convmask_create(blur, 0.01); //memfull?
 		convmask_set(blur, 0, 0, R(1.0));
 		return blur;
 	}
 	else
 	{
 		r = (int)(radius + R(1.0));
-		convmask_create(blur, r);
+		convmask_create(blur, r); //memfull?
 		make_coords_line(coords_line, radius, angle);
 		for (i = -r; i <= r; i++) {
 			for (j = -r; j <= r; j++) {

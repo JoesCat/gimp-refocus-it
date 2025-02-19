@@ -18,73 +18,66 @@
  */
 
 #include <stdlib.h>
-#include "xmalloc.h"
 #include "threshold.h"
 
 threshold_t* threshold_create_mirror(threshold_t* threshold, convmask_t* convmask, image_t* image)
 {
-	int i,j;
-	int k,l;
-	real_t s;
-	int x, y, r;
+  int i,j;
+  int k,l;
+  real_t s;
+  int x, y, r;
 
-	threshold->x = x = image->x;
-	threshold->y = y = image->y;
-	r = convmask->radius;
-	threshold->data = (real_t*)xmalloc(sizeof(real_t) * x * y);
-	for (i = 0; i < x; i++) {
-		for (j = 0; j < y; j++) {
-			s = R(0.0);
-			for (k = -r; k <= r; k++) {
-				for (l = -r; l <= r; l++) {
-					s += convmask_get(convmask, k, l) * image_get_mirror(image, k + i, l + j);
-				}
-			}
-			threshold->data[j * x + i] = s;
-		}
-	}
-	return threshold;
+  threshold->x = x = image->x;
+  threshold->y = y = image->y;
+  r = convmask->radius;
+  if (!(threshold->data = (real_t*)malloc(sizeof(real_t) * x * y)))
+    return NULL;
+  for (i = 0; i < x; i++) {
+    for (j = 0; j < y; j++) {
+      s = R(0.0);
+      for (k = -r; k <= r; k++) {
+        for (l = -r; l <= r; l++) {
+          s += convmask_get(convmask, k, l) * image_get_mirror(image, k + i, l + j);
+        }
+      }
+      threshold->data[j * x + i] = s;
+    }
+  }
+  return threshold;
 }
 
 threshold_t* threshold_create_period(threshold_t* threshold, convmask_t* convmask, image_t* image)
 {
-	int i,j;
-	int k,l;
-	real_t s;
-	int x, y, r;
+  int i,j;
+  int k,l;
+  real_t s;
+  int x, y, r;
 
-	threshold->x = x = image->x;
-	threshold->y = y = image->y;
-	r = convmask->radius;
-	threshold->data = (real_t*)xmalloc(sizeof(real_t) * x * y);
-	for (i = 0; i < x; i++) {
-		for (j = 0; j < y; j++) {
-			s = R(0.0);
-			for (k = -r; k <= r; k++) { 
-				for (l = -r; l <= r; l++) {
-					s += convmask_get(convmask, k, l) * image_get_period(image, k + i, l + j);
-				}
-			}
-			threshold->data[j * x + i] = s;
-		}
-	}
-	return threshold;
+  threshold->x = x = image->x;
+  threshold->y = y = image->y;
+  r = convmask->radius;
+  if (!(threshold->data = (real_t*)malloc(sizeof(real_t) * x * y)))
+    return NULL;
+  for (i = 0; i < x; i++) {
+    for (j = 0; j < y; j++) {
+      s = R(0.0);
+      for (k = -r; k <= r; k++) { 
+        for (l = -r; l <= r; l++) {
+          s += convmask_get(convmask, k, l) * image_get_period(image, k + i, l + j);
+        }
+      }
+      threshold->data[j * x + i] = s;
+    }
+  }
+  return threshold;
 }
 
 void threshold_destroy(threshold_t* threshold)
 {
-	xfree(threshold->data);
+  free(threshold->data);
 }
-
-/*
-* GET / SET
-*/
-
-#if !defined(INLINE) && !defined(INLINE_MACRO)
 
 real_t threshold_get(threshold_t* threshold, int x, int y)
 {
-	return MACRO_THRESHOLD_GET(threshold, x, y);
+  return threshold->data[y * threshold->x + x];
 }
-
-#endif
