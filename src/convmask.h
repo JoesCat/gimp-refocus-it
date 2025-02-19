@@ -28,10 +28,10 @@ C_DECL_BEGIN
 /** structures */
 
 typedef struct {
-	int      radius;
-	int      r21;
-	int      speeder;
-	real_t  *coef;
+  int     radius;
+  int     r21;
+  int     speeder;
+  real_t *coef;
 } convmask_t;
 
 
@@ -42,44 +42,9 @@ convmask_t* convmask_convolve(convmask_t* ct, convmask_t* c1, convmask_t* c2);
 
 void convmask_set_circle(convmask_t* convmask, int i, int j, real_t value);
 void convmask_print(convmask_t* convmask, FILE* file);
-
-/*
-* GET / SET
-*/
-
-#define MACRO_CONVMASK_SET(convmask, i, j, value) (convmask)->coef[(j)*(convmask)->r21 + (convmask)->speeder + (i)] = (value)
-#define MACRO_CONVMASK_GET(convmask, i, j) ((convmask)->coef[(j)*(convmask)->r21 + (convmask)->speeder + (i)])
-#define MACRO_CONVMASK_GET_0(c, i, j) ((abs(i) <= (c)->radius && abs(j) <= (c)->radius) ? MACRO_CONVMASK_GET(c, i, j) : R(0.0))
-
-#if defined(USE_INLINES)
-
-#if defined(INLINE)
-
-static INLINE void convmask_set(convmask_t* convmask, int i, int j, real_t value)
-{
-	MACRO_CONVMASK_SET(convmask, i, j, value);
-}
-
-static INLINE real_t convmask_get(convmask_t* convmask, int i, int j)
-{
-	return MACRO_CONVMASK_GET(convmask, i, j);
-}
-
-#else
-
 void convmask_set(convmask_t* convmask, int i, int j, real_t value);
 real_t convmask_get(convmask_t* convmask, int i, int j);
 real_t convmask_get_0(convmask_t* convmask, int i, int j);
-
-#endif
-
-#else
-
-#define convmask_set(convmask, i, j, value) MACRO_CONVMASK_SET(convmask, i, j, value)
-#define convmask_get(convmask, i, j) MACRO_CONVMASK_GET(convmask, i, j)
-#define convmask_get_0(convmask, i, j) MACRO_CONVMASK_GET_0(convmask, i, j)
-
-#endif
 
 C_DECL_END
 

@@ -19,17 +19,12 @@
 
 #include "boundary.h"
 
-#if !defined(INLINE) && !defined(INLINE_MACRO)
-
 int boundary_normalize_mirror(int x, int lx)
 {
-  return MACRO_BOUNDARY_NORMALIZE_MIRROR(x, lx);
+  return ((x >= lx) ? 2*lx-x-2 : ((x < 0) ? -x : x));
 }
 
 int boundary_normalize_period(int x, int lx)
 {
-  return MACRO_BOUNDARY_NORMALIZE_PERIOD(x, lx);
+  return ((x >= lx) ? (x - lx) : ((x < 0) ? x + lx : x));
 }
-
-#endif
-

@@ -87,9 +87,6 @@ dnl GIMP PLUG-IN
 AC_ARG_WITH([gimp], AS_HELP_STRING([--with-gimp],[Install GIMP plug-in version of refocus-it @<:@default=yes@:>]), with_gimp=$withval, with_gimp=yes)
 AM_CONDITIONAL(REFOCUS_GIMP, test x$with_gimp = xyes)
 
-dnl INLINES
-AC_ARG_ENABLE([inlines], AS_HELP_STRING([--enable-inlines],[Use inlines instead of macros @<:@default=no@:>]), enable_inlines=$enableval, enable_inlines=no)
-
 dnl DEBUG
 AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug],[Enable debugging @<:@default=no@:>]), , enable_debug=no)
 
@@ -98,10 +95,6 @@ AC_ARG_ENABLE([doubles], AS_HELP_STRING([--enable-doubles],[Use doubles instead 
 
 if test x$enable_debug = xno ; then
 	AC_DEFINE(NDEBUG,, Enable debugging)
-fi
-if test x$enable_inlines = xyes ; then
-	AC_DEFINE(USE_INLINES,, Use inlines instead of macros)
-	AC_C_INLINE
 fi
 
 if test x$enable_doubles = xyes ; then

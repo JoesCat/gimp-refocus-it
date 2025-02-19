@@ -76,17 +76,17 @@ image_t* image_convolve_mirror(image_t* dst, image_t* src, convmask_t* filter)
       value = R(0.0);
       for (k = -r; k <= r; k++)
       {
-	for (l = -r; l <= r; l++)
-	{
-	  value += convmask_get(filter, k,l) * image_get_mirror(src, i-k, j-l);
-	}
+        for (l = -r; l <= r; l++)
+        {
+          value += convmask_get(filter, k,l) * image_get_mirror(src, i-k, j-l);
+        }
       }
       image_set(dst, i, j, value);
     }
   }
   return dst;
 }
-	  
+
 image_t* image_convolve_period(image_t* dst, image_t* src, convmask_t* filter)
 {
   int i, j, k, l, r;
@@ -100,10 +100,10 @@ image_t* image_convolve_period(image_t* dst, image_t* src, convmask_t* filter)
       value = R(0.0);
       for (k = -r; k <= r; k++)
       {
-	for (l = -r; l <= r; l++)
-	{
-	  value += convmask_get(filter, k,l) * image_get_period(src, i-k, j-l);
-	}
+        for (l = -r; l <= r; l++)
+        {
+          value += convmask_get(filter, k,l) * image_get_period(src, i-k, j-l);
+        }
       }
       image_set(dst, i, j, value);
     }
@@ -400,7 +400,7 @@ int image_save_pnm(image_t* imageR, image_t* imageG, image_t* imageB, int binary
     fclose(file);
   }
   else {
-	retval = -1;
+    retval = -1;
   }
   return retval;
 }
@@ -415,68 +415,59 @@ int image_load_pnm(image_t* imageR, image_t* imageG, image_t* imageB, int* bpp, 
     fclose(file);
   }
   else {
-	retval = -1;
+    retval = -1;
   }
   return retval;
 }
 
 void image_load_bytes_gray(image_t* image, unsigned char* src)
 {
-	int size, i;
-	real_t *dst;
-	size = image->x * image->y;
+  int size, i;
+  real_t *dst;
 
-	dst = image->data;
-	for (i = 0; i < size; i++)
-	{
-		*dst = *src;
-		src++;
-		dst++;
-	}
+  size = image->x * image->y;
+  dst = image->data;
+  for (i = 0; i < size; i++)
+  {
+    *dst = *src;
+    src++;
+    dst++;
+  }
 }
 
 void image_load_bytes_rgb(image_t* image, unsigned char* bytes, unsigned int channel)
 {
-	int size, i;
-	unsigned char *src;
-	real_t *dst;
-	size = image->x * image->y;
+  int size, i;
+  unsigned char *src;
+  real_t *dst;
 
-	dst = image->data;
-	src = bytes + channel;
-	for (i = 0; i < size; i++)
-	{
-		*dst = *src;
-		src += 3;
-		dst++;
-	}
+  size = image->x * image->y;
+  dst = image->data;
+  src = bytes + channel;
+  for (i = 0; i < size; i++)
+  {
+    *dst = *src;
+    src += 3;
+    dst++;
+  }
 }
-
-
-/*
- * GET / SET
- */
-
-#if !defined(INLINE) && !defined(INLINE_MACRO)
 
 real_t image_get_mirror(image_t* image, int x, int y)
 {
-  return MACRO_IMAGE_GET_MIRROR(image, x, y);
+  return image->data[boundary_normalize_mirror(y, image->y) * image->x + boundary_normalize_mirror(x, image->x)];
 }
 
 real_t image_get_period(image_t* image, int x, int y)
 {
-  return MACRO_IMAGE_GET_PERIOD(image, x, y);
+  return image->data[boundary_normalize_period(y, image->y) * image->x + boundary_normalize_period(x, image->x)];
 }
 
 void image_set(image_t* image, int x, int y, real_t value)
 {
-  MACRO_IMAGE_SET(image, x, y, value);
+  image->data[y * image->x + x] = value;
 }
 
 real_t image_get(image_t* image, int x, int y)
 {
-  return MACRO_IMAGE_GET(image, x, y);
+  return (image->data[y * image->x + x]);
 }
-
-#endif

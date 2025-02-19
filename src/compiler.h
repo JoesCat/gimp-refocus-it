@@ -42,24 +42,6 @@ typedef float        real_t;
 #define M_PI 3.1415926535897932384626433832795
 #endif
 
-#ifdef USE_INLINES
-
-#undef INLINE_MACRO
-#ifndef INLINE
-#if defined(MSC_VER)
-#define INLINE __inline
-#elif defined(inline) || defined(__cplusplus)
-#define INLINE inline
-#endif
-#endif
-
-#else
-
-#undef INLINE
-#define INLINE_MACRO
-
-#endif
-
 #ifdef __cplusplus
 #define C_DECL_BEGIN extern "C" {
 #define C_DECL_END }

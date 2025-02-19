@@ -297,22 +297,13 @@ lambda_t* lambda_calculate(lambda_t* lambda, image_t* image)
   }
 }
 
-
-/*
- * GET / SET
- */
-
-#if !defined(INLINE) && !defined(INLINE_MACRO)
-
 real_t lambda_get_mirror(lambda_t* lambda, int x, int y)
 {
-  return MACRO_LAMBDA_GET_MIRROR(lambda, x, y);
+ return lambda->lambda[boundary_normalize_mirror(y, lambda->y)*lambda->x + boundary_normalize_mirror(x, lambda->x)];
 }
 
 real_t lambda_get_period(lambda_t* lambda, int x, int y)
 {
-  return MACRO_LAMBDA_GET_PERIOD(lambda, x, y);
+  return lambda->lambda[boundary_normalize_period(y, lambda->y)*lambda->x + boundary_normalize_period(x, lambda->x)];
 }
-
-#endif
 

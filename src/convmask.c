@@ -72,10 +72,10 @@ convmask_t* convmask_convolve(convmask_t* ct, convmask_t* c1, convmask_t* c2)
       sum = 0.0;
       for (x0 = -r2; x0 <= r2; x0++)
       {
-	for (y0 = -r2; y0 <= r2; y0++)
-	{
-	  sum += convmask_get_0(&ctmp, x - x0, y - y0) * convmask_get(c2, x0, y0);
-	}
+        for (y0 = -r2; y0 <= r2; y0++)
+        {
+          sum += convmask_get_0(&ctmp, x - x0, y - y0) * convmask_get(c2, x0, y0);
+        }
       }
       convmask_set(ct, x, y, sum);
     }
@@ -126,25 +126,17 @@ void convmask_print(convmask_t* convmask, FILE* file)
   }
 }
 
-/*
- * GET / SET
- */
-
-#if !defined(INLINE) && !defined(INLINE_MACRO)
-
 void convmask_set(convmask_t* convmask, int i, int j, real_t value)
 {
-  MACRO_CONVMASK_SET(convmask, i, j, value);
+  convmask->coef[j*convmask->r21 + convmask->speeder + i] = value;
 }
 
 real_t convmask_get(convmask_t* convmask, int i, int j)
 {
-  return MACRO_CONVMASK_GET(convmask, i, j);
+  return (convmask->coef[j*convmask->r21 + convmask->speeder + i]);
 }
 
 real_t convmask_get_0(convmask_t* convmask, int i, int j)
 {
-  return MACRO_CONVMASK_GET_0(convmask, i, j);
+  return ((abs(i) <= convmask->radius && abs(j) <= convmask->radius) ? convmask_get(convmask, i, j) : R(0.0));
 }
-
-#endif

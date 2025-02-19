@@ -80,42 +80,25 @@ void weights_destroy(weights_t* weights)
 
 void weights_print(weights_t* weights, FILE* file)
 {
-	int i, j;
-	fprintf(file, "%s (rxnz, rynz)=(%d,%d)\n", "WEIGHTS:", weights->rxnz, weights->rynz);
-	for (j = -weights->r2; j <= weights->r2; j++)
-	{
-		for (i = -weights->r2; i <= weights->r2; i++)
-		{
-			fprintf(file, "%3.3e ", (float)weights_get(weights, i, j));
-		}
-		fprintf(file, "\n");
-	}
+  int i, j;
+
+  fprintf(file, "%s (rxnz, rynz)=(%d,%d)\n", "WEIGHTS: ", weights->rxnz, weights->rynz);
+  for (j = -weights->r2; j <= weights->r2; j++) {
+    for (i = -weights->r2; i <= weights->r2; i++) {
+      fprintf(file, " %3.3e", (float)weights_get(weights, i, j));
+    }
+    fprintf(file, "\n");
+  }
 }
-
-/*
-* GET / SET
-*/
-
-#if !defined(INLINE) && !defined(INLINE_MACRO)
 
 real_t weights_get(weights_t* weights, int x, int y)
 {
-	/*
-	* The same as
-	* return weights->w[(weights->r2 + y) * weights->size + (weights->r2 + x)];
-	*/
-	return MACRO_WEIGHTS_GET(weights, x, y);
+  return weights->w[(weights->r2 + y) * weights->size + (weights->r2 + x)];
 }
 
 void weights_set(weights_t* weights, int x, int y, real_t value)
 {
-	/*
-	* The same as
-	* weights->w[(weights->r2 + y) * weights->size + (weights->r2 + x)] = value;
-	*/
-	MACRO_WEIGHTS_SET(weights, x, y, value);
-	weights->w[weights->stride + y * weights->size + x] = value;
+  weights->w[(weights->r2 + y) * weights->size + (weights->r2 + x)] = value;
+  weights->w[weights->stride + y * weights->size + x] = value;
 }
-
-#endif
 
