@@ -1,52 +1,112 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
+# This file is distributed under the same license as the https://github.com/JoesCat/gimp-refocus-it/issues package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-07-19 13:34+0200\n"
+"Project-Id-Version: https://github.com/JoesCat/gimp-refocus-it/issues 2.0\n"
+"Report-Msgid-Bugs-To: https://github.com/JoesCat/gimp-refocus-it/issues\n"
+"POT-Creation-Date: 2025-02-18 19:19-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: cmd-line/main-cmd.c:165
+#: ../cmd-line/getopt.c:693
+#, c-format
+msgid "%s: option `%s' is ambiguous\n"
+msgstr ""
+
+#: ../cmd-line/getopt.c:718
+#, c-format
+msgid "%s: option `--%s' doesn't allow an argument\n"
+msgstr ""
+
+#: ../cmd-line/getopt.c:723
+#, c-format
+msgid "%s: option `%c%s' doesn't allow an argument\n"
+msgstr ""
+
+#: ../cmd-line/getopt.c:741 ../cmd-line/getopt.c:914
+#, c-format
+msgid "%s: option `%s' requires an argument\n"
+msgstr ""
+
+#. --option
+#: ../cmd-line/getopt.c:770
+#, c-format
+msgid "%s: unrecognized option `--%s'\n"
+msgstr ""
+
+#. +option or -option
+#: ../cmd-line/getopt.c:774
+#, c-format
+msgid "%s: unrecognized option `%c%s'\n"
+msgstr ""
+
+#. 1003.2 specifies the format of this message.
+#: ../cmd-line/getopt.c:800
+#, c-format
+msgid "%s: illegal option -- %c\n"
+msgstr ""
+
+#: ../cmd-line/getopt.c:803
+#, c-format
+msgid "%s: invalid option -- %c\n"
+msgstr ""
+
+#. 1003.2 specifies the format of this message.
+#: ../cmd-line/getopt.c:833 ../cmd-line/getopt.c:963
+#, c-format
+msgid "%s: option requires an argument -- %c\n"
+msgstr ""
+
+#: ../cmd-line/getopt.c:880
+#, c-format
+msgid "%s: option `-W %s' is ambiguous\n"
+msgstr ""
+
+#: ../cmd-line/getopt.c:898
+#, c-format
+msgid "%s: option `-W %s' doesn't allow an argument\n"
+msgstr ""
+
+#: ../cmd-line/main-cmd.c:165
 #, c-format
 msgid "%s: expected value for parameter '%s' -%s\n"
 msgstr ""
 
-#: cmd-line/main-cmd.c:170
+#: ../cmd-line/main-cmd.c:170
 #, c-format
 msgid "%s: expected argument for option -%s\n"
 msgstr ""
 
-#: cmd-line/main-cmd.c:178
+#: ../cmd-line/main-cmd.c:178
 #, c-format
 msgid "%s: expected value of type '%s' for parameter '%s' -%s\n"
 msgstr ""
 
-#: cmd-line/main-cmd.c:197
+#: ../cmd-line/main-cmd.c:197
 #, c-format
 msgid "parameter '%s' -%s out of range (%f, %f)\n"
 msgstr ""
 
-#: cmd-line/main-cmd.c:225
+#: ../cmd-line/main-cmd.c:225
 #, c-format
 msgid "parameter '%s' -%s out of range (%d, %d)\n"
 msgstr ""
 
-#: cmd-line/main-cmd.c:247
+#: ../cmd-line/main-cmd.c:247
 #, c-format
 msgid "expected valid value for parameter '%s' -%s, got '%s'\n"
 msgstr ""
 
-#: cmd-line/main-cmd.c:277
+#: ../cmd-line/main-cmd.c:277
 #, c-format
 msgid ""
 "Iterative refocus - refocus images acquired with defocussed camera\n"
@@ -61,7 +121,7 @@ msgid ""
 "                       real number from <0.0, 32.0>\n"
 msgstr ""
 
-#: cmd-line/main-cmd.c:289
+#: ../cmd-line/main-cmd.c:289
 #, c-format
 msgid ""
 "   -n <noise reduction factor>, --noise=<noise reduction factor>\n"
@@ -72,7 +132,8 @@ msgid ""
 "                       real number from <0.0, %.1f>\n"
 msgstr ""
 
-#: cmd-line/main-cmd.c:298
+#: ../cmd-line/main-cmd.c:298
+#, c-format
 msgid ""
 "   -a, --non-adaptive\n"
 "                       do not use adaptive adjustments of noise\n"
@@ -87,7 +148,8 @@ msgid ""
 "                       size of window for area smoothing 1..16\n"
 msgstr ""
 
-#: cmd-line/main-cmd.c:310
+#: ../cmd-line/main-cmd.c:310
+#, c-format
 msgid ""
 "   -i <number of iterations>, --iterations=<number of iterations>\n"
 "                       number of iterations to compute\n"
@@ -98,7 +160,8 @@ msgid ""
 "                       (are) written to stdout\n"
 msgstr ""
 
-#: cmd-line/main-cmd.c:318
+#: ../cmd-line/main-cmd.c:318
+#, c-format
 msgid ""
 "   -h, --help\n"
 "                       print this help and exit\n"
@@ -106,7 +169,7 @@ msgid ""
 "                       print version information and exit\n"
 msgstr ""
 
-#: cmd-line/main-cmd.c:326
+#: ../cmd-line/main-cmd.c:326
 #, c-format
 msgid ""
 "Iterative refocus - %s version %s\n"
@@ -117,305 +180,305 @@ msgid ""
 "warranty; not even for MERCHANTABILITY or FITNESS FORA PARTICULAR PURPOSE.\n"
 msgstr ""
 
-#: cmd-line/main-cmd.c:364
+#: ../cmd-line/main-cmd.c:364
 msgid "defocus radius"
 msgstr ""
 
-#: cmd-line/main-cmd.c:367
+#: ../cmd-line/main-cmd.c:367
 msgid "gaussian blur variance"
 msgstr ""
 
-#: cmd-line/main-cmd.c:370 cmd-line/main-cmd.c:605
+#: ../cmd-line/main-cmd.c:370 ../cmd-line/main-cmd.c:605
 msgid "noise reduction"
 msgstr ""
 
-#: cmd-line/main-cmd.c:373
+#: ../cmd-line/main-cmd.c:373
 msgid "boundary"
 msgstr ""
 
-#: cmd-line/main-cmd.c:376
+#: ../cmd-line/main-cmd.c:376
 msgid "smoothness"
 msgstr ""
 
-#: cmd-line/main-cmd.c:382
+#: ../cmd-line/main-cmd.c:382
 msgid "save every n-th result"
 msgstr ""
 
-#: cmd-line/main-cmd.c:388
+#: ../cmd-line/main-cmd.c:388
 msgid "verbosity level"
 msgstr ""
 
-#: cmd-line/main-cmd.c:391
+#: ../cmd-line/main-cmd.c:391
 msgid "window size"
 msgstr ""
 
-#: cmd-line/main-cmd.c:394
+#: ../cmd-line/main-cmd.c:394
 msgid "number of iterations"
 msgstr ""
 
-#: cmd-line/main-cmd.c:397
+#: ../cmd-line/main-cmd.c:397
 msgid "file name"
 msgstr ""
 
-#: cmd-line/main-cmd.c:411
+#: ../cmd-line/main-cmd.c:411
 #, c-format
 msgid "%s: unrecognized option '-%s'\n"
 msgstr ""
 
-#: cmd-line/main-cmd.c:421
+#: ../cmd-line/main-cmd.c:421
 #, c-format
 msgid "%s: error processing options\n"
 msgstr ""
 
-#: cmd-line/main-cmd.c:428
+#: ../cmd-line/main-cmd.c:428
 #, c-format
 msgid "%s: unrecognized option '%s'\n"
 msgstr ""
 
-#: cmd-line/main-cmd.c:433
+#: ../cmd-line/main-cmd.c:433
 #, c-format
 msgid "Try '%s -h' for more information\n"
 msgstr ""
 
-#: cmd-line/main-cmd.c:438
+#: ../cmd-line/main-cmd.c:438
 #, c-format
 msgid "defocus blur radius: %f"
 msgstr ""
 
-#: cmd-line/main-cmd.c:439
+#: ../cmd-line/main-cmd.c:439
 #, c-format
 msgid "gaussian blur variance: %f"
 msgstr ""
 
-#: cmd-line/main-cmd.c:440
+#: ../cmd-line/main-cmd.c:440
 #, c-format
 msgid "noise reduction: %f"
 msgstr ""
 
-#: cmd-line/main-cmd.c:441
+#: ../cmd-line/main-cmd.c:441
 #, c-format
 msgid "area smoothness: %f"
 msgstr ""
 
-#: cmd-line/main-cmd.c:442
+#: ../cmd-line/main-cmd.c:442
 #, c-format
 msgid "area smoothing window size: %d"
 msgstr ""
 
-#: cmd-line/main-cmd.c:443
+#: ../cmd-line/main-cmd.c:443
 #, c-format
 msgid "number of iterations: %d"
 msgstr ""
 
-#: cmd-line/main-cmd.c:444
+#: ../cmd-line/main-cmd.c:444
 #, c-format
 msgid "boundaries: %s"
 msgstr ""
 
-#: cmd-line/main-cmd.c:445
+#: ../cmd-line/main-cmd.c:445
 #, c-format
 msgid "adaptive noise reduction: %s"
 msgstr ""
 
-#: cmd-line/main-cmd.c:445 cmd-line/main-cmd.c:449
+#: ../cmd-line/main-cmd.c:445 ../cmd-line/main-cmd.c:449
 msgid "yes"
 msgstr ""
 
-#: cmd-line/main-cmd.c:445 cmd-line/main-cmd.c:449
+#: ../cmd-line/main-cmd.c:445 ../cmd-line/main-cmd.c:449
 msgid "no"
 msgstr ""
 
-#: cmd-line/main-cmd.c:446
+#: ../cmd-line/main-cmd.c:446
 #, c-format
 msgid "save intermediate results: %d"
 msgstr ""
 
-#: cmd-line/main-cmd.c:447
+#: ../cmd-line/main-cmd.c:447
 #, c-format
 msgid "input file: %s"
 msgstr ""
 
-#: cmd-line/main-cmd.c:448
+#: ../cmd-line/main-cmd.c:448
 #, c-format
 msgid "verbosity: %d"
 msgstr ""
 
-#: cmd-line/main-cmd.c:449
+#: ../cmd-line/main-cmd.c:449
 #, c-format
 msgid "use binary PNM: %s"
 msgstr ""
 
-#: cmd-line/main-cmd.c:460
+#: ../cmd-line/main-cmd.c:460
 #, c-format
 msgid "%s: failed to load PNM file '%s': %s\n"
 msgstr ""
 
-#: cmd-line/main-cmd.c:470
+#: ../cmd-line/main-cmd.c:470
 #, c-format
 msgid "%s: failed to read PNM file from stdin: %s\n"
 msgstr ""
 
-#: cmd-line/main-cmd.c:514
+#: ../cmd-line/main-cmd.c:514
 #, c-format
 msgid "saving file %s"
 msgstr ""
 
-#: cmd-line/main-cmd.c:518
+#: ../cmd-line/main-cmd.c:518
 #, c-format
 msgid "%s: failed to save PNM file '%s': %s\n"
 msgstr ""
 
-#: cmd-line/main-cmd.c:528
+#: ../cmd-line/main-cmd.c:528
 msgid "saving to stdout"
 msgstr ""
 
-#: cmd-line/main-cmd.c:529
+#: ../cmd-line/main-cmd.c:529
 #, c-format
 msgid "%s: failed to write PNM file to stdout: %s\n"
 msgstr ""
 
-#: cmd-line/main-cmd.c:561
+#: ../cmd-line/main-cmd.c:561
 #, c-format
 msgid "%5.1f%% completed"
 msgstr ""
 
-#: cmd-line/main-cmd.c:588
+#: ../cmd-line/main-cmd.c:588
 msgid "mirror boundaries"
 msgstr ""
 
-#: cmd-line/main-cmd.c:592
+#: ../cmd-line/main-cmd.c:592
 msgid "periodical boundaries"
 msgstr ""
 
-#: cmd-line/main-cmd.c:600
+#: ../cmd-line/main-cmd.c:600
 msgid "adaptive noise reduction"
 msgstr ""
 
-#: cmd-line/main-cmd.c:610
+#: ../cmd-line/main-cmd.c:610
 msgid "RGB picture"
 msgstr ""
 
-#: cmd-line/main-cmd.c:615
+#: ../cmd-line/main-cmd.c:615
 msgid "gray picture"
 msgstr ""
 
-#: cmd-line/main-cmd.c:697
+#: ../cmd-line/main-cmd.c:697
 msgid "starting iterations"
 msgstr ""
 
-#: cmd-line/main-cmd.c:729
+#: ../cmd-line/main-cmd.c:729
 msgid "finished iterations"
 msgstr ""
 
-#: cmd-line/main-cmd.c:749
+#: ../cmd-line/main-cmd.c:749
 msgid "computation finished"
 msgstr ""
 
-#: cmd-line/main-cmd.c:766
+#: ../cmd-line/main-cmd.c:766
 msgid "processed input parameters"
 msgstr ""
 
-#: cmd-line/main-cmd.c:768
+#: ../cmd-line/main-cmd.c:768
 msgid "data initialized"
 msgstr ""
 
-#: cmd-line/main-cmd.c:771
+#: ../cmd-line/main-cmd.c:771
 msgid "data destroyed"
 msgstr ""
 
-#: gimp-plugin/main-gimp.c:374
+#: ../gimp-plugin/main-gimp.c:374
 msgid "Iterative refocus..."
 msgstr ""
 
-#: gimp-plugin/main-gimp.c:381
+#: ../gimp-plugin/main-gimp.c:381
 msgid "Iterative refocus."
 msgstr ""
 
-#: gimp-plugin/main-gimp.c:382
+#: ../gimp-plugin/main-gimp.c:382
 msgid "This plug-in iteratively refocuses a defocused image."
 msgstr ""
 
-#: gimp-plugin/main-gimp.c:489
+#: ../gimp-plugin/main-gimp.c:489
 msgid "mirror boundary"
 msgstr ""
 
-#: gimp-plugin/main-gimp.c:490
+#: ../gimp-plugin/main-gimp.c:490
 msgid "periodical boundary"
 msgstr ""
 
-#: gimp-plugin/main-gimp.c:840
+#: ../gimp-plugin/main-gimp.c:840
 msgid "Degradation"
 msgstr ""
 
 #. blur radius
-#: gimp-plugin/main-gimp.c:845
+#: ../gimp-plugin/main-gimp.c:845
 msgid "Radius:"
 msgstr ""
 
 #. gaussian blur
-#: gimp-plugin/main-gimp.c:855
+#: ../gimp-plugin/main-gimp.c:855
 msgid "Gauss:"
 msgstr ""
 
 #. motion blur
-#: gimp-plugin/main-gimp.c:865
+#: ../gimp-plugin/main-gimp.c:865
 msgid "Motion size:"
 msgstr ""
 
 #. motion angle
-#: gimp-plugin/main-gimp.c:875
+#: ../gimp-plugin/main-gimp.c:875
 msgid "Motion angle:"
 msgstr ""
 
 #. noise reduction
-#: gimp-plugin/main-gimp.c:885
+#: ../gimp-plugin/main-gimp.c:885
 msgid "Noise:"
 msgstr ""
 
 #. iterations
-#: gimp-plugin/main-gimp.c:895 gimp-plugin/main-gimp.c:1107
+#: ../gimp-plugin/main-gimp.c:895 ../gimp-plugin/main-gimp.c:1107
 msgid "Iterations:"
 msgstr ""
 
 #. boundary
-#: gimp-plugin/main-gimp.c:905
+#: ../gimp-plugin/main-gimp.c:905
 msgid "Boundary:"
 msgstr ""
 
-#: gimp-plugin/main-gimp.c:929
+#: ../gimp-plugin/main-gimp.c:929
 msgid "Area smoothing"
 msgstr ""
 
-#: gimp-plugin/main-gimp.c:933
+#: ../gimp-plugin/main-gimp.c:933
 msgid "Smoothness:"
 msgstr ""
 
-#: gimp-plugin/main-gimp.c:942
+#: ../gimp-plugin/main-gimp.c:942
 msgid "Area size:"
 msgstr ""
 
-#: gimp-plugin/main-gimp.c:951
+#: ../gimp-plugin/main-gimp.c:951
 msgid "Adaptive smoothing:"
 msgstr ""
 
-#: gimp-plugin/main-gimp.c:1034
+#: ../gimp-plugin/main-gimp.c:1034
 msgid "Motion direction"
 msgstr ""
 
-#: gimp-plugin/main-gimp.c:1123 gimp-plugin/main-gimp.c:1141
+#: ../gimp-plugin/main-gimp.c:1123 ../gimp-plugin/main-gimp.c:1141
 msgid "Preview"
 msgstr ""
 
-#: gimp-plugin/main-gimp.c:1136
+#: ../gimp-plugin/main-gimp.c:1136
 msgid "Iterative Refocus"
 msgstr ""
 
-#: gimp-plugin/main-gimp.c:1204
+#: ../gimp-plugin/main-gimp.c:1204
 msgid "Refocusing..."
 msgstr ""
 
 #. INIT_I18N_UI();
-#: gimp-plugin/main-gimp.c:1453
+#: ../gimp-plugin/main-gimp.c:1453
 #, c-format
 msgid "Iterative Refocus - %s"
 msgstr ""

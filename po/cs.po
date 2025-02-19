@@ -1,19 +1,79 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR Free Software Foundation, Inc.
 # This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Lukas Kunc <Lukas.Kunc@seznam.cz>, 2004.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: refocus-it 2.0.0\n"
-"Report-Msgid-Bugs-To: \n"
+"Report-Msgid-Bugs-To: https://github.com/JoesCat/gimp3-refocus-it/issues\n"
 "POT-Creation-Date: 2004-07-19 13:34+0200\n"
-"PO-Revision-Date: 2004-07-16 12:00+0200\n"
+"PO-Revision-Date: 2024-10-15 20:49-0700\n"
 "Last-Translator: Lukas Kunc <Lukas.Kunc@seznam.cz>\n"
 "Language-Team: Lukas Kunc <Lukas.Kunc@seznam.cz>\n"
+"Language: cs\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#: cmd-line/getopt.c:693
+#, c-format
+msgid "%s: option `%s' is ambiguous\n"
+msgstr ""
+
+#: cmd-line/getopt.c:718
+#, c-format
+msgid "%s: option `--%s' doesn't allow an argument\n"
+msgstr ""
+
+#: cmd-line/getopt.c:723
+#, c-format
+msgid "%s: option `%c%s' doesn't allow an argument\n"
+msgstr ""
+
+#: cmd-line/getopt.c:741 cmd-line/getopt.c:914
+#, c-format
+msgid "%s: option `%s' requires an argument\n"
+msgstr ""
+
+#. --option
+#: cmd-line/getopt.c:770
+#, fuzzy, c-format
+msgid "%s: unrecognized option `--%s'\n"
+msgstr "%s: neznámá volba '-%s'\n"
+
+#. +option or -option
+#: cmd-line/getopt.c:774
+#, fuzzy, c-format
+msgid "%s: unrecognized option `%c%s'\n"
+msgstr "%s: neznámá volba '%s'\n"
+
+#. 1003.2 specifies the format of this message.
+#: cmd-line/getopt.c:800
+#, fuzzy, c-format
+msgid "%s: illegal option -- %c\n"
+msgstr "%s: neznámá volba '-%s'\n"
+
+#: cmd-line/getopt.c:803
+#, fuzzy, c-format
+msgid "%s: invalid option -- %c\n"
+msgstr "%s: neznámá volba '-%s'\n"
+
+#. 1003.2 specifies the format of this message.
+#: cmd-line/getopt.c:833 cmd-line/getopt.c:963
+#, c-format
+msgid "%s: option requires an argument -- %c\n"
+msgstr ""
+
+#: cmd-line/getopt.c:880
+#, c-format
+msgid "%s: option `-W %s' is ambiguous\n"
+msgstr ""
+
+#: cmd-line/getopt.c:898
+#, c-format
+msgid "%s: option `-W %s' doesn't allow an argument\n"
+msgstr ""
 
 #: cmd-line/main-cmd.c:165
 #, c-format
@@ -89,6 +149,7 @@ msgstr ""
 "                       reálné číslo z intervalu <0.0, %.1f>\n"
 
 #: cmd-line/main-cmd.c:298
+#, c-format
 msgid ""
 "   -a, --non-adaptive\n"
 "                       do not use adaptive adjustments of noise\n"
@@ -114,6 +175,7 @@ msgstr ""
 "                       velikost okna pro vyhlazování oblastí 1..16\n"
 
 #: cmd-line/main-cmd.c:310
+#, c-format
 msgid ""
 "   -i <number of iterations>, --iterations=<number of iterations>\n"
 "                       number of iterations to compute\n"
@@ -132,6 +194,7 @@ msgstr ""
 "                       je zapsán na standardní výstup\n"
 
 #: cmd-line/main-cmd.c:318
+#, c-format
 msgid ""
 "   -h, --help\n"
 "                       print this help and exit\n"

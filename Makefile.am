@@ -14,15 +14,5 @@ endif
 
 SUBDIRS = po src doc $(TARGET_GIMP) $(TARGET_CMD)
 
-EXTRA_DIST = \
-	BUGS			\
-	autogen.sh		\
-        intltool-extract.in     \
-        intltool-merge.in       \
-        intltool-update.in
+EXTRA_DIST = BUGS autogen.sh
 
-
-DISTCLEANFILES = \
-	intltool-extract	\
-	intltool-merge		\
-	intltool-update
