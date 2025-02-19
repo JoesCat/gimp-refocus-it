@@ -83,10 +83,6 @@ if test x"${have_libm}" != xyes; then
     AC_MSG_FAILURE([ERROR: Please install the Math library and math.h],[1])
 fi
 
-dnl COMMAND-LINE
-AC_ARG_WITH([cmdline], AS_HELP_STRING([--with-cmdline],[Install cmd-line version of refocus-it @<:@default=yes@:>]), with_cmdline=$withval, with_cmdline=yes)
-AM_CONDITIONAL(REFOCUS_CMDLINE, test x$with_cmdline = xyes)
-
 dnl GIMP PLUG-IN
 AC_ARG_WITH([gimp], AS_HELP_STRING([--with-gimp],[Install GIMP plug-in version of refocus-it @<:@default=yes@:>]), with_gimp=$withval, with_gimp=yes)
 AM_CONDITIONAL(REFOCUS_GIMP, test x$with_gimp = xyes)
@@ -157,16 +153,6 @@ AC_FUNC_MALLOC
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS(sqrt)
 
-dnl Command-line version
-if test x$with_cmdline = xyes ; then
-	dnl Checks for header files.
-	AC_CHECK_HEADERS([unistd.h])
-	dnl Checks for library functions.
-	AC_CHECK_FUNCS([setlocale memset strerror strrchr])
-	AC_CONFIG_FILES(cmd-line/Makefile)
-fi
-
-
 dnl Gimp-plugin
 if test x$with_gimp = xyes ; then
 	PKG_CHECK_MODULES(GIMP, gimp-2.0 gimpui-2.0)
@@ -192,7 +178,6 @@ if test x$with_gimp = xyes ; then
 	if test "x$have_gtk_2_3" != "xyes"; then
 		CPPFLAGS="$CPPFLAGS -DG_DISABLE_DEPRECATED -DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED"
 	fi
-	AC_CONFIG_FILES([help/Makefile help/images/Makefile help/C/Makefile gimp-plugin/Makefile])
 fi
 
 #--------------------------------------------------------------------------
@@ -215,7 +200,6 @@ AH_BOTTOM([
 AC_CONFIG_FILES([
 Makefile
 po/Makefile
-doc/Makefile
 src/Makefile
 ])
 
