@@ -17,7 +17,6 @@
  *
  */
 
-#include <stdlib.h>
 #include "threshold.h"
 
 threshold_t* threshold_create_mirror(threshold_t* threshold, convmask_t* convmask, image_t* image) {

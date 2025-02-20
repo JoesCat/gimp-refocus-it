@@ -17,8 +17,11 @@
  *
  */
 
-#include <stdlib.h>
 #include "convmask.h"
+
+static double convmask_get_0(convmask_t* convmask, int i, int j) {
+  return ((abs(i) <= convmask->radius && abs(j) <= convmask->radius) ? convmask_get(convmask, i, j) : 0.0);
+}
 
 convmask_t* convmask_create(convmask_t* convmask, int radius) {
   convmask->radius = radius;
@@ -98,17 +101,6 @@ convmask_t* convmask_normalize(convmask_t* convmask) {
   return convmask;
 }
 
-void convmask_print(convmask_t* convmask, FILE* file) {
-  int i, j;
-  fprintf(file, "%s\n", "CONVMASK:");
-  for (i = -convmask->radius; i <= convmask->radius; i++) {
-    for (j = -convmask->radius; j <= convmask->radius; j++) {
-      fprintf(file, "%1.4f ", (float)convmask_get(convmask, j, i));
-    }
-    fprintf(file, "\n");
-  }
-}
-
 void convmask_set(convmask_t* convmask, int i, int j, double value) {
   convmask->coef[j*convmask->r21 + convmask->speeder + i] = value;
 }
@@ -117,6 +109,15 @@ double convmask_get(convmask_t* convmask, int i, int j) {
   return (convmask->coef[j*convmask->r21 + convmask->speeder + i]);
 }
 
-double convmask_get_0(convmask_t* convmask, int i, int j) {
-  return ((abs(i) <= convmask->radius && abs(j) <= convmask->radius) ? convmask_get(convmask, i, j) : 0.0);
+#if defined(NDEBUG)
+void convmask_print(convmask_t* convmask, FILE* file) {
+  int i, j;
+  fprintf(file, "CONVMASK:\n");
+  for (i = -convmask->radius; i <= convmask->radius; i++) {
+    for (j = -convmask->radius; j <= convmask->radius; j++) {
+      fprintf(file, " %1.4f", (float)convmask_get(convmask, j, i));
+    }
+    fprintf(file, "\n");
+  }
 }
+#endif

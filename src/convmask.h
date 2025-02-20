@@ -20,7 +20,6 @@
 #ifndef _CONVMASK_H
 #define _CONVMASK_H
 
-#include <stdio.h>
 #include "compiler.h"
 
 C_DECL_BEGIN
@@ -34,17 +33,19 @@ typedef struct {
   double *coef;
 } convmask_t;
 
-
 convmask_t* convmask_create(convmask_t* convmask, int radius);
 void convmask_destroy(convmask_t* convmask);
 convmask_t* convmask_normalize(convmask_t* convmask);
 convmask_t* convmask_convolve(convmask_t* ct, convmask_t* c1, convmask_t* c2);
-
-void convmask_set_circle(convmask_t* convmask, int i, int j, double value);
-void convmask_print(convmask_t* convmask, FILE* file);
 void convmask_set(convmask_t* convmask, int i, int j, double value);
 double convmask_get(convmask_t* convmask, int i, int j);
-double convmask_get_0(convmask_t* convmask, int i, int j);
+void convmask_set_circle(convmask_t* convmask, int i, int j, double value);
+
+#if defined(NDEBUG)
+#include <stdio.h>
+#include <stdlib.h>
+void convmask_print(convmask_t* convmask, FILE* file);
+#endif
 
 C_DECL_END
 

@@ -19,7 +19,6 @@
  */
 
 #include <math.h>
-#include <stdlib.h>
 #include "blur.h"
 
 #ifndef SQR
@@ -53,7 +52,7 @@ static double circle_integral (double x, double radius) {
   }
 }
 
-static double circle_intensity (int x, int y, double radius) {
+static double circle_intensity(int x, int y, double radius) {
   double xlo, xhi, ylo, yhi, xc1, xc2;
   double symmetry_factor;
 
@@ -100,7 +99,8 @@ convmask_t* blur_create_defocus(convmask_t* blur, double radius) {
   double val;
 
   r = (int)(radius + 0.5);
-  convmask_create(blur, r); //memfull?
+  if (!(convmask_create(blur, r)))
+    return NULL;
 
   if (r < 1) {
     convmask_set(blur, 0, 0, 1.0);
@@ -108,7 +108,7 @@ convmask_t* blur_create_defocus(convmask_t* blur, double radius) {
   } else {
     for (i = 0; i <= r; i++) {
       for (j = 0; j <= r; j++) {
-        val = (double)circle_intensity(i, j, radius);
+        val = circle_intensity(i, j, radius);
         if (val < 0.0) val = 0.0;
           convmask_set_circle(blur, i, j, val);
       }
@@ -125,7 +125,8 @@ convmask_t* blur_create_gauss(convmask_t* blur, double variance) {
   int i, j, radius;
 
   if (variance < 1e-6) {
-    convmask_create(blur, 0); //memfull?
+    if (!(convmask_create(blur, 0)))
+      return NULL;
     convmask_set(blur, 0, 0, 1.0);
     return blur;
   } else {
@@ -134,7 +135,8 @@ convmask_t* blur_create_gauss(convmask_t* blur, double variance) {
     var = variance;
     epsilon = sqrt(-2.0 * log(1e-2));
     radius = (int)(var * epsilon + 0.5);
-    convmask_create(blur, radius); //memfull?
+    if (!(convmask_create(blur, radius)))
+      return NULL;
     var *= var * 2.0;
     mult = var * M_PI;
     for (i = 0; i <= radius; i++) {
@@ -258,12 +260,14 @@ convmask_t* blur_create_motion(convmask_t* blur, double radius, double angle) {
   point_t coords_line[4];
 
   if (radius < 1e-4) {
-    convmask_create(blur, 0.01); //memfull?
+    if (!(convmask_create(blur, 0.01)))
+      return NULL;
     convmask_set(blur, 0, 0, 1.0);
     return blur;
   } else {
     r = (int)(radius + 1.0);
-    convmask_create(blur, r); //memfull?
+    if (!(convmask_create(blur, r)))
+      return NULL;
     make_coords_line(coords_line, radius, angle);
     for (i = -r; i <= r; i++) {
       for (j = -r; j <= r; j++) {

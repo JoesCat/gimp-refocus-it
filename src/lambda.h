@@ -41,10 +41,6 @@ typedef struct {
 lambda_t* lambda_create(lambda_t* lambda, int x, int y, double minlambda, int winsize, convmask_t* filter);
 void lambda_destroy(lambda_t* lambda);
 
-lambda_t* lambda_calculate_period(lambda_t* lambda, image_t* image);
-lambda_t* lambda_calculate_period_nl(lambda_t* lambda, image_t* image);
-lambda_t* lambda_calculate_mirror(lambda_t* lambda, image_t* image);
-lambda_t* lambda_calculate_mirror_nl(lambda_t* lambda, image_t* image);
 lambda_t* lambda_calculate(lambda_t* lambda, image_t* image);
 
 void lambda_set_mirror(lambda_t* lambda, int mirror);

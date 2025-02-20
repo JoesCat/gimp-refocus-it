@@ -27,8 +27,8 @@
 C_DECL_BEGIN
 
 typedef struct {
-  int x;
-  int y;
+  int     x;
+  int     y;
   double *data;
 } threshold_t;
 

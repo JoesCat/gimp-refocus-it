@@ -38,8 +38,6 @@ typedef struct {
   threshold_t threshold;
 } hopfield_t;
 
-hopfield_t* hopfield_create_mirror(hopfield_t* hopfield, convmask_t* convmask, image_t* image, lambda_t* lambdafld);
-hopfield_t* hopfield_create_period(hopfield_t* hopfield, convmask_t* convmask, image_t* image, lambda_t* lambdafld);
 hopfield_t* hopfield_create(hopfield_t* hopfield, convmask_t* convmask, image_t* image, lambda_t* lambdafld);
 void hopfield_set_mirror(hopfield_t* hopfield, int mirror);
 void hopfield_destroy(hopfield_t* hopfield);

@@ -17,8 +17,12 @@
  *
  */
 
-#include <stdlib.h>
 #include "weights.h"
+
+static void weights_set(weights_t* weights, int x, int y, double value) {
+  weights->w[(weights->r2 + y) * weights->size + (weights->r2 + x)] = value;
+  weights->w[weights->stride + y * weights->size + x] = value;
+}
 
 weights_t* weights_create(weights_t* weights, convmask_t* convmask) {
   int r, r2, i, j, k, l;
@@ -32,8 +36,8 @@ weights_t* weights_create(weights_t* weights, convmask_t* convmask) {
   weights->size = size = 2*r2 + 1;
   weights->stride = r2 * (size + 1);
   if (!(weights->w = (double*)malloc(sizeof(double) * size * size)))
-    return NULL;
-
+    return NULL; /* memory full */
+ 
   for (i = 0; i <= r2; i++) {
     for (j = 0; j <= r2; j++) {
       s = 0.0;
@@ -43,17 +47,17 @@ weights_t* weights_create(weights_t* weights, convmask_t* convmask) {
         }
       }
       if (fabs(s) > 1e-6) {
-          if (i > rxnz) rxnz = i;
-          if (j > rynz) rynz = j;
-        }
-        weights_set(weights,  i,  j, s);
-        weights_set(weights, -i, -j, s);
+        if (i > rxnz) rxnz = i;
+        if (j > rynz) rynz = j;
+      }
+      weights_set(weights,  i,  j, s);
+      weights_set(weights, -i, -j, s);
 
-        s = 0.0;
-        for (k = -r; k <= r-i; k++) {
-          for (l = -r; l <= r-j; l++) {
-            s -= convmask_get(convmask, k, l+j) * convmask_get(convmask, k+i, l);
-          }
+      s = 0.0;
+      for (k = -r; k <= r-i; k++) {
+        for (l = -r; l <= r-j; l++) {
+          s -= convmask_get(convmask, k, l+j) * convmask_get(convmask, k+i, l);
+        }
       }
       if (fabs(s) > 1e-6) {
         if (i > rxnz) rxnz = i;
@@ -74,10 +78,15 @@ void weights_destroy(weights_t* weights) {
   free(weights->w);
 }
 
+double weights_get(weights_t* weights, int x, int y) {
+  return weights->w[(weights->r2 + y) * weights->size + (weights->r2 + x)];
+}
+
+#if defined(NDEBUG)
 void weights_print(weights_t* weights, FILE* file) {
   int i, j;
 
-  fprintf(file, "%s (rxnz, rynz)=(%d,%d)\n", "WEIGHTS: ", weights->rxnz, weights->rynz);
+  fprintf(file, "WEIGHTS: (rxnz, rynz)=(%d,%d)\n", weights->rxnz, weights->rynz);
   for (j = -weights->r2; j <= weights->r2; j++) {
     for (i = -weights->r2; i <= weights->r2; i++) {
       fprintf(file, " %3.3e", (float)weights_get(weights, i, j));
@@ -85,13 +94,4 @@ void weights_print(weights_t* weights, FILE* file) {
     fprintf(file, "\n");
   }
 }
-
-double weights_get(weights_t* weights, int x, int y) {
-  return weights->w[(weights->r2 + y) * weights->size + (weights->r2 + x)];
-}
-
-void weights_set(weights_t* weights, int x, int y, double value) {
-  weights->w[(weights->r2 + y) * weights->size + (weights->r2 + x)] = value;
-  weights->w[weights->stride + y * weights->size + x] = value;
-}
-
+#endif

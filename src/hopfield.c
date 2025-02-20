@@ -17,7 +17,6 @@
  *
  */
 
-#include <stdlib.h>
 #include "hopfield.h"
 
 #define hardlim(x) ((x)>=0?1:-1)
@@ -362,25 +361,33 @@ static double hopfield_iteration_mirror_lambda(hopfield_t* hopfield) {
   return Sum;
 }
 
-/* Public functions */
-
-hopfield_t* hopfield_create_mirror(hopfield_t* hopfield, convmask_t* convmask, image_t* image, lambda_t* lambdafld) {
+static hopfield_t* hopfield_create_mirror(hopfield_t* hopfield, convmask_t* convmask, image_t* image, lambda_t* lambdafld) {
   hopfield->image = image;
   hopfield->mirror = 1;
-  weights_create(&(hopfield->weights), convmask);
-  threshold_create_mirror(&(hopfield->threshold), convmask, image);
+  if (!(weights_create(&(hopfield->weights), convmask)))
+    return NULL;
+  if (!(threshold_create_mirror(&(hopfield->threshold), convmask, image))) {
+    weights_destroy(&(hopfield->weights));
+    return NULL;
+  }
   hopfield->lambdafld = lambdafld;
   return hopfield;
 }
 
-hopfield_t* hopfield_create_period(hopfield_t* hopfield, convmask_t* convmask, image_t* image, lambda_t* lambdafld) {
+static hopfield_t* hopfield_create_period(hopfield_t* hopfield, convmask_t* convmask, image_t* image, lambda_t* lambdafld) {
   hopfield->image = image;
   hopfield->mirror = 0;
-  weights_create(&(hopfield->weights), convmask);
-  threshold_create_period(&(hopfield->threshold), convmask, image);
+  if (!(weights_create(&(hopfield->weights), convmask)))
+    return NULL;
+  if (!(threshold_create_mirror(&(hopfield->threshold), convmask, image))) {
+    weights_destroy(&(hopfield->weights));
+    return NULL;
+  }
   hopfield->lambdafld = lambdafld;
   return hopfield;
 }
+
+/* Public functions */
 
 hopfield_t* hopfield_create(hopfield_t* hopfield, convmask_t* convmask, image_t* image, lambda_t* lambdafld) {
   if (hopfield->mirror) return hopfield_create_mirror(hopfield, convmask, image, lambdafld);
