@@ -26,18 +26,6 @@
 
 #include <math.h>
 
-#ifdef USE_DOUBLES
-
-typedef double       real_t;
-#define R(x)         (x)
-
-#else
-
-typedef float        real_t;
-#define R(x)         (x##F)
-
-#endif
-
 #ifndef M_PI
 #define M_PI 3.1415926535897932384626433832795
 #endif

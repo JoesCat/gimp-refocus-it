@@ -27,7 +27,7 @@
 C_DECL_BEGIN
 
 typedef struct {
-  real_t *w;
+  double *w;
   int     r2;
   int     rxnz, rynz;
   int     stride;
@@ -39,8 +39,8 @@ void weights_destroy(weights_t* weights);
 
 void weights_print(weights_t* weights, FILE* file);
 
-real_t weights_get(weights_t* weights, int x, int y);
-void weights_set(weights_t* weights, int x, int y, real_t value);
+double weights_get(weights_t* weights, int x, int y);
+void weights_set(weights_t* weights, int x, int y, double value);
 
 C_DECL_END
 

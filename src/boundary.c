@@ -19,12 +19,10 @@
 
 #include "boundary.h"
 
-int boundary_normalize_mirror(int x, int lx)
-{
+int boundary_normalize_mirror(int x, int lx) {
   return ((x >= lx) ? 2*lx-x-2 : ((x < 0) ? -x : x));
 }
 
-int boundary_normalize_period(int x, int lx)
-{
+int boundary_normalize_period(int x, int lx) {
   return ((x >= lx) ? (x - lx) : ((x < 0) ? x + lx : x));
 }

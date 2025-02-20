@@ -29,13 +29,13 @@ C_DECL_BEGIN
 typedef struct {
   int x;
   int y;
-  real_t *data;
+  double *data;
 } threshold_t;
 
 threshold_t* threshold_create_mirror(threshold_t* threshold, convmask_t* convmask, image_t* image);
 threshold_t* threshold_create_period(threshold_t* threshold, convmask_t* convmask, image_t* image);
 void threshold_destroy(threshold_t* threshold);
-real_t threshold_get(threshold_t* threshold, int x, int y);
+double threshold_get(threshold_t* threshold, int x, int y);
 
 C_DECL_END
 

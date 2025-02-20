@@ -30,21 +30,20 @@
 C_DECL_BEGIN
 
 typedef struct {
-	int         mirror;
-	image_t     *image;
-	weights_t   weights;
-	real_t      lambda;
-	lambda_t    *lambdafld;
-	threshold_t threshold;
+  int         mirror;
+  image_t    *image;
+  weights_t   weights;
+  double      lambda;
+  lambda_t   *lambdafld;
+  threshold_t threshold;
 } hopfield_t;
-
 
 hopfield_t* hopfield_create_mirror(hopfield_t* hopfield, convmask_t* convmask, image_t* image, lambda_t* lambdafld);
 hopfield_t* hopfield_create_period(hopfield_t* hopfield, convmask_t* convmask, image_t* image, lambda_t* lambdafld);
 hopfield_t* hopfield_create(hopfield_t* hopfield, convmask_t* convmask, image_t* image, lambda_t* lambdafld);
 void hopfield_set_mirror(hopfield_t* hopfield, int mirror);
 void hopfield_destroy(hopfield_t* hopfield);
-real_t hopfield_iteration(hopfield_t* hopfield);
+double hopfield_iteration(hopfield_t* hopfield);
 
 C_DECL_END
 

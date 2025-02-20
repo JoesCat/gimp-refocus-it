@@ -30,7 +30,7 @@ C_DECL_BEGIN
 typedef struct {
   int     x;
   int     y;
-  real_t *data;
+  double *data;
 } image_t;
 
 void image_init(image_t* image);
@@ -48,10 +48,10 @@ void image_load_bytes_rgb(image_t* image, unsigned char* bytes, unsigned int cha
 image_t* image_convolve_mirror(image_t* dst, image_t* src, convmask_t* filter);
 image_t* image_convolve_period(image_t* dst, image_t* src, convmask_t* filter);
 
-real_t image_get_mirror(image_t* image, int x, int y);
-real_t image_get_period(image_t* image, int x, int y);
-void image_set(image_t* image, int x, int y, real_t value);
-real_t image_get(image_t* image, int x, int y);
+double image_get_mirror(image_t* image, int x, int y);
+double image_get_period(image_t* image, int x, int y);
+void image_set(image_t* image, int x, int y, double value);
+double image_get(image_t* image, int x, int y);
 
 C_DECL_END
 

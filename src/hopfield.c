@@ -28,24 +28,20 @@
 #define max(x,y) (((x) >= (y))?(x):(y))
 #endif
 
+/* Private functions */
 
-/*
- * Private functions
- */
-
-static real_t hopfield_iteration_period(hopfield_t* hopfield)
-{
-  real_t pom;
+static double hopfield_iteration_period(hopfield_t* hopfield) {
+  double pom;
   int p, r;
   int i,j;
-  real_t s;
+  double s;
   int k;
   int dui;
-  real_t dE;
-  real_t Sum;
-  real_t ddui;
-  real_t dk;
-  real_t z;
+  double dE;
+  double Sum;
+  double ddui;
+  double dk;
+  double z;
   int x, y;
   int value;
   int rxnz, rynz;
@@ -55,79 +51,77 @@ static real_t hopfield_iteration_period(hopfield_t* hopfield)
   rxnz = hopfield->weights.rxnz;
   rynz = hopfield->weights.rynz;
 
-  pom = weights_get(&(hopfield->weights), 0, 0) - R(20.0) * hopfield->lambda;
-  Sum = R(0.0);
+  pom = weights_get(&(hopfield->weights), 0, 0) - 20.0 * hopfield->lambda;
+  Sum = 0.0;
   for (i = 0; i < x; i++) {
     for (j = 0; j < y; j++) {
-      s = R(0.0);
+      s = 0.0;
       for (p = -rxnz; p <= rxnz; p++) {
         for (r = -rynz; r <= rynz; r++) {
           s += weights_get(&(hopfield->weights), p, r) * image_get_period(hopfield->image, i+p, j+r);
         }
       }
 
-      z = R(20.0) * image_get_period(hopfield->image, i,j);
+      z = 20.0 * image_get_period(hopfield->image, i,j);
       z += image_get_period(hopfield->image, i+2, j);
       z += image_get_period(hopfield->image, i-2, j);
-      z += R(2.0) * (  image_get_period(hopfield->image, i+1, j-1)
-                      + image_get_period(hopfield->image, i-1, j+1)
-                      + image_get_period(hopfield->image, i+1, j+1)
-                      + image_get_period(hopfield->image, i-1, j-1));
+      z += 2.0 * (image_get_period(hopfield->image, i+1, j-1) +
+                  image_get_period(hopfield->image, i-1, j+1) +
+                  image_get_period(hopfield->image, i+1, j+1) +
+                  image_get_period(hopfield->image, i-1, j-1));
       z += image_get_period(hopfield->image, i, j+2);
       z += image_get_period(hopfield->image, i, j-2);
-      z += R(-8.0) * (  image_get_period(hopfield->image, i+1, j)
-                       + image_get_period(hopfield->image, i, j+1)
-                       + image_get_period(hopfield->image, i-1, j)
-                       + image_get_period(hopfield->image, i, j-1));
+      z += -8.0 * (image_get_period(hopfield->image, i+1, j  ) +
+                   image_get_period(hopfield->image, i  , j+1) +
+                   image_get_period(hopfield->image, i-1, j  ) +
+                   image_get_period(hopfield->image, i  , j-1));
 
       s -= hopfield->lambda*z;
 
       s += threshold_get(&(hopfield->threshold), i, j);
-      value = (int)(image_get(hopfield->image, i, j) + R(0.5));
+      value = (int)(image_get(hopfield->image, i, j) + 0.5);
 
       dui = hardlim(s);
-      ddui = (real_t)dui;
-      dE = R(-2.0) * s * ddui - pom;
+      ddui = dui;
+      dE = -2.0 * s * ddui - pom;
       k = -(int)(s/pom) + dui;
-      if (dE < R(0.0)) {
+      if (dE < 0.0) {
         if (k>0 && value < 255) {
           k = min(k, 255 - value);
           k = (rand()%k)+1;
           value += k;
-          dk = (real_t)k;
-          dE = (R(-2.0)*s - pom*dk)*dk;
+          dk = k;
+          dE = (-2.0*s - pom*dk)*dk;
           Sum += dE;
-        }
-        else if (k < 0 && value > 0) {
+        } else if (k < 0 && value > 0) {
           k = min(-k, value);
           k = (rand()%k)+1;
           value -= k;
-          dk = (real_t)-k;
-          dE = (R(-2.0)*s - pom*dk)*dk;
+          dk = -k;
+          dE = (-2.0*s - pom*dk)*dk;
           Sum += dE;
         }
-        image_set(hopfield->image, i, j, (real_t)value);
+        image_set(hopfield->image, i, j, value);
       }
     }
   }
   return Sum;
 }
 
-static real_t hopfield_iteration_period_lambda(hopfield_t* hopfield)
-{
+static double hopfield_iteration_period_lambda(hopfield_t* hopfield) {
   int p, r;
   int i, j;
   int k;
   int dui;
-  real_t dE;
-  real_t Sum;
-  real_t ddui;
-  real_t dk;
-  real_t z;
+  double dE;
+  double Sum;
+  double ddui;
+  double dk;
+  double z;
   int value;
-  real_t pom;
-  real_t lmbd00, lmbd01, lmbd10, lmbd_10, lmbd0_1;
-  real_t s;
+  double pom;
+  double lmbd00, lmbd01, lmbd10, lmbd_10, lmbd0_1;
+  double s;
   int x, y;
   int rxnz, rynz;
 
@@ -136,23 +130,23 @@ static real_t hopfield_iteration_period_lambda(hopfield_t* hopfield)
   rxnz = hopfield->weights.rxnz;
   rynz = hopfield->weights.rynz;
 
-  Sum = R(0.0);
+  Sum = 0.0;
   for (i = 0; i < x; i++) {
     for (j = 0; j < y; j++) {
-      s = R(0.0);
+      s = 0.0;
       for (p = -rxnz; p <= rxnz; p++) {
         for (r = -rynz; r <= rynz; r++) {
           s += weights_get(&(hopfield->weights), p, r) * image_get_period(hopfield->image, i+p, j+r);
         }
       }
 
-      lmbd00 = lambda_get_period(hopfield->lambdafld,  i,     j    );
-      lmbd01 = lambda_get_period(hopfield->lambdafld,  i,     j + 1);
-      lmbd10 = lambda_get_period(hopfield->lambdafld,  i + 1, j    );
-      lmbd_10 = lambda_get_period(hopfield->lambdafld, i - 1, j    );
-      lmbd0_1 = lambda_get_period(hopfield->lambdafld, i,     j - 1);
+      lmbd00  = lambda_get_period(hopfield->lambdafld, i  , j  );
+      lmbd01  = lambda_get_period(hopfield->lambdafld, i  , j+1);
+      lmbd10  = lambda_get_period(hopfield->lambdafld, i+1, j  );
+      lmbd_10 = lambda_get_period(hopfield->lambdafld, i-1, j  );
+      lmbd0_1 = lambda_get_period(hopfield->lambdafld, i  , j-1);
 
-      pom = (lmbd01 + lmbd10 + lmbd_10 + lmbd0_1 + R(16.0) * lmbd00);
+      pom = (lmbd01 + lmbd10 + lmbd_10 + lmbd0_1 + 16.0 * lmbd00);
       z = pom * image_get_period(hopfield->image, i, j);
       z += lmbd10 * image_get_period(hopfield->image, i+2, j);
       z += lmbd_10 * image_get_period(hopfield->image, i-2, j);
@@ -160,12 +154,12 @@ static real_t hopfield_iteration_period_lambda(hopfield_t* hopfield)
       z += (lmbd01 + lmbd_10) * image_get_period(hopfield->image, i-1, j+1);
       z += (lmbd10 + lmbd01) * image_get_period(hopfield->image, i+1, j+1);
       z += (lmbd0_1 + lmbd_10) * image_get_period(hopfield->image, i-1, j-1);
-      z += R(-4.0) * (lmbd10 + lmbd00) * image_get_period(hopfield->image, i+1, j);
-      z += R(-4.0) * (lmbd00 + lmbd_10) * image_get_period(hopfield->image, i-1, j);
+      z += -4.0 * (lmbd10 + lmbd00) * image_get_period(hopfield->image, i+1, j);
+      z += -4.0 * (lmbd00 + lmbd_10) * image_get_period(hopfield->image, i-1, j);
       z += lmbd01 * image_get_period(hopfield->image, i, j+2);
       z += lmbd0_1 * image_get_period(hopfield->image, i, j-2);
-      z += R(-4.0) * (lmbd01 + lmbd00) * image_get_period(hopfield->image, i, j+1);
-      z += R(-4.0) * (lmbd00 + lmbd0_1) * image_get_period(hopfield->image, i, j-1);
+      z += -4.0 * (lmbd01 + lmbd00) * image_get_period(hopfield->image, i, j+1);
+      z += -4.0 * (lmbd00 + lmbd0_1) * image_get_period(hopfield->image, i, j-1);
 
       s -= hopfield->lambda*z;
       pom = -pom;
@@ -173,49 +167,47 @@ static real_t hopfield_iteration_period_lambda(hopfield_t* hopfield)
 
       s += threshold_get(&(hopfield->threshold), i, j);
       pom += weights_get(&(hopfield->weights), 0, 0);
-      value = (int)(image_get(hopfield->image, i, j) + R(0.5));
+      value = (int)(image_get(hopfield->image, i, j) + 0.5);
 
       dui = hardlim(s);
-      ddui = (real_t)dui;
-      dE = R(-2.0) * s * ddui - pom;
+      ddui = dui;
+      dE = -2.0 * s * ddui - pom;
       k = -(int)(s/pom) + dui;
-      if (dE < R(0.0)) {
+      if (dE < 0.0) {
         if (k>0 && value < 255) {
           k = min(k, 255-value);
           k = (rand()%k)+1;
           value += k;
-          dk = (real_t)k;
-          dE = (R(-2.0)*s - pom*dk)*dk;
+          dk = k;
+          dE = (-2.0*s - pom*dk)*dk;
           Sum += dE;
-        }
-        else if (k < 0 && value > 0) {
+        } else if (k < 0 && value > 0) {
           k = min(-k, value);
           k = (rand()%k)+1;
           value -= k;
-          dk = (real_t)-k;
-          dE = (R(-2.0)*s - pom*dk)*dk;
+          dk = k;
+          dE = (-2.0*s - pom*dk)*dk;
           Sum += dE;
         }
-        image_set(hopfield->image, i, j, (real_t)value);
+        image_set(hopfield->image, i, j, value);
       }
     }
   }
   return Sum;
 }
 
-static real_t hopfield_iteration_mirror(hopfield_t* hopfield)
-{
-  real_t pom;
+static double hopfield_iteration_mirror(hopfield_t* hopfield) {
+  double pom;
   int p, r;
   int i,j;
-  real_t s;
+  double s;
   int k;
   int dui;
-  real_t dE;
-  real_t Sum;
-  real_t ddui;
-  real_t dk;
-  real_t z;
+  double dE;
+  double Sum;
+  double ddui;
+  double dk;
+  double z;
   int x, y;
   int value;
   int rxnz, rynz;
@@ -225,79 +217,77 @@ static real_t hopfield_iteration_mirror(hopfield_t* hopfield)
   rxnz = hopfield->weights.rxnz;
   rynz = hopfield->weights.rynz;
 
-  pom = weights_get(&(hopfield->weights), 0, 0) - R(20.0) * hopfield->lambda;
-  Sum = R(0.0);
+  pom = weights_get(&(hopfield->weights), 0, 0) - 20.0 * hopfield->lambda;
+  Sum = 0.0;
   for (i = 0; i < x; i++) {
     for (j = 0; j < y; j++) {
-      s = R(0.0);
+      s = 0.0;
       for (p = -rxnz; p <= rxnz; p++) {
         for (r = -rynz; r <= rynz; r++) {
           s += weights_get(&(hopfield->weights), p, r) * image_get_mirror(hopfield->image, i+p, j+r);
         }
       }
 
-	  z = R(20.0) * image_get_mirror(hopfield->image, i,j);
+      z = 20.0 * image_get_mirror(hopfield->image, i,j);
       z += image_get_mirror(hopfield->image, i+2, j);
       z += image_get_mirror(hopfield->image, i-2, j);
-      z += R(2.0) * (  image_get_mirror(hopfield->image, i+1, j-1)
-                      + image_get_mirror(hopfield->image, i-1, j+1)
-                      + image_get_mirror(hopfield->image, i+1, j+1)
-                      + image_get_mirror(hopfield->image, i-1, j-1));
+      z += 2.0 * (image_get_mirror(hopfield->image, i+1, j-1) +
+                  image_get_mirror(hopfield->image, i-1, j+1) +
+                  image_get_mirror(hopfield->image, i+1, j+1) +
+                  image_get_mirror(hopfield->image, i-1, j-1));
       z += image_get_mirror(hopfield->image, i, j+2);
       z += image_get_mirror(hopfield->image, i, j-2);
-      z += R(-8.0) * (  image_get_mirror(hopfield->image, i+1, j)
-                       + image_get_mirror(hopfield->image, i, j+1)
-                       + image_get_mirror(hopfield->image, i-1, j)
-                       + image_get_mirror(hopfield->image, i, j-1));
+      z += -8.0 * (image_get_mirror(hopfield->image, i+1, j  ) +
+                   image_get_mirror(hopfield->image, i  , j+1) +
+                   image_get_mirror(hopfield->image, i-1, j  ) +
+                   image_get_mirror(hopfield->image, i  , j-1));
 
       s -= hopfield->lambda*z;
 
       s += threshold_get(&(hopfield->threshold), i, j);
-      value = (int)(image_get(hopfield->image, i, j) + R(0.5));
+      value = (int)(image_get(hopfield->image, i, j) + 0.5);
 
       dui = hardlim(s);
-      ddui = (real_t)dui;
-      dE = R(-2.0) * s * ddui - pom;
+      ddui = dui;
+      dE = -2.0 * s * ddui - pom;
       k = -(int)(s/pom) + dui;
-      if (dE < R(0.0)) {
+      if (dE < 0.0) {
         if (k>0 && value < 255) {
           k = min(k, 255 - value);
           k = (rand()%k)+1;
           value += k;
-          dk = (real_t)k;
-          dE = (R(-2.0)*s - pom*dk)*dk;
+          dk = k;
+          dE = (-2.0*s - pom*dk)*dk;
           Sum += dE;
-        }
-        else if (k < 0 && value > 0) {
+        } else if (k < 0 && value > 0) {
           k = min(-k, value);
           k = (rand()%k)+1;
           value -= k;
-          dk = (real_t)-k;
-          dE = (R(-2.0)*s - pom*dk)*dk;
+          dk = -k;
+          dE = (-2.0*s - pom*dk)*dk;
           Sum += dE;
         }
-        image_set(hopfield->image, i, j, (real_t)value);
+        image_set(hopfield->image, i, j, value);
       }
     }
   }
   return Sum;
 }
 
-static real_t hopfield_iteration_mirror_lambda(hopfield_t* hopfield)
-{
+static double hopfield_iteration_mirror_lambda(hopfield_t* hopfield) {
   int p, r;
   int i, j;
   int k;
   int dui;
-  real_t dE;
-  real_t Sum;
-  real_t ddui;
-  real_t dk;
-  real_t z;
+  double dE;
+  double Sum;
+  double ddui;
+  double dk;
+  double z;
   int value;
-  real_t pom;
-  real_t lmbd00, lmbd01, lmbd10, lmbd_10, lmbd0_1;
-  real_t s;
+  double pom;
+  double lmbd00, lmbd01, lmbd10, lmbd_10, lmbd0_1;
+  double s;
   int x, y;
   int rxnz, rynz;
 
@@ -306,23 +296,23 @@ static real_t hopfield_iteration_mirror_lambda(hopfield_t* hopfield)
   rxnz = hopfield->weights.rxnz;
   rynz = hopfield->weights.rynz;
 
-  Sum = R(0.0);
+  Sum = 0.0;
   for (i = 0; i < x; i++) {
     for (j = 0; j < y; j++) {
-      s = R(0.0);
+      s = 0.0;
       for (p = -rxnz; p <= rxnz; p++) {
         for (r = -rynz; r <= rynz; r++) {
           s += weights_get(&(hopfield->weights), p, r) * image_get_mirror(hopfield->image, i+p, j+r);
         }
       }
 
-      lmbd00 = lambda_get_mirror(hopfield->lambdafld,  i,     j    );
-      lmbd01 = lambda_get_mirror(hopfield->lambdafld,  i,     j + 1);
-      lmbd10 = lambda_get_mirror(hopfield->lambdafld,  i + 1, j    );
-      lmbd_10 = lambda_get_mirror(hopfield->lambdafld, i - 1, j    );
-      lmbd0_1 = lambda_get_mirror(hopfield->lambdafld, i,     j - 1);
+      lmbd00  = lambda_get_mirror(hopfield->lambdafld, i  , j  );
+      lmbd01  = lambda_get_mirror(hopfield->lambdafld, i  , j+1);
+      lmbd10  = lambda_get_mirror(hopfield->lambdafld, i+1, j  );
+      lmbd_10 = lambda_get_mirror(hopfield->lambdafld, i-1, j  );
+      lmbd0_1 = lambda_get_mirror(hopfield->lambdafld, i  , j-1);
 
-      pom = (lmbd01 + lmbd10 + lmbd_10 + lmbd0_1 + R(16.0) * lmbd00);
+      pom = (lmbd01 + lmbd10 + lmbd_10 + lmbd0_1 + 16.0 * lmbd00);
       z = pom * image_get_mirror(hopfield->image, i, j);
       z += lmbd10 * image_get_mirror(hopfield->image, i+2, j);
       z += lmbd_10 * image_get_mirror(hopfield->image, i-2, j);
@@ -330,12 +320,12 @@ static real_t hopfield_iteration_mirror_lambda(hopfield_t* hopfield)
       z += (lmbd01 + lmbd_10) * image_get_mirror(hopfield->image, i-1, j+1);
       z += (lmbd10 + lmbd01) * image_get_mirror(hopfield->image, i+1, j+1);
       z += (lmbd0_1 + lmbd_10) * image_get_mirror(hopfield->image, i-1, j-1);
-      z += R(-4.0) * (lmbd10 + lmbd00) * image_get_mirror(hopfield->image, i+1, j);
-      z += R(-4.0) * (lmbd00 + lmbd_10) * image_get_mirror(hopfield->image, i-1, j);
+      z += -4.0 * (lmbd10 + lmbd00) * image_get_mirror(hopfield->image, i+1, j);
+      z += -4.0 * (lmbd00 + lmbd_10) * image_get_mirror(hopfield->image, i-1, j);
       z += lmbd01 * image_get_mirror(hopfield->image, i, j+2);
       z += lmbd0_1 * image_get_mirror(hopfield->image, i, j-2);
-      z += R(-4.0) * (lmbd01 + lmbd00) * image_get_mirror(hopfield->image, i, j+1);
-      z += R(-4.0) * (lmbd00 + lmbd0_1) * image_get_mirror(hopfield->image, i, j-1);
+      z += -4.0 * (lmbd01 + lmbd00) * image_get_mirror(hopfield->image, i, j+1);
+      z += -4.0 * (lmbd00 + lmbd0_1) * image_get_mirror(hopfield->image, i, j-1);
 
       s -= hopfield->lambda*z;
       pom = -pom;
@@ -343,42 +333,38 @@ static real_t hopfield_iteration_mirror_lambda(hopfield_t* hopfield)
 
       s += threshold_get(&(hopfield->threshold), i, j);
       pom += weights_get(&(hopfield->weights), 0, 0);
-      value = (int)(image_get(hopfield->image, i, j) + R(0.5));
+      value = (int)(image_get(hopfield->image, i, j) + 0.5);
 
       dui = hardlim(s);
-      ddui = (real_t)dui;
-      dE = R(-2.0) * s * ddui - pom;
+      ddui = dui;
+      dE = -2.0 * s * ddui - pom;
       k = -(int)(s/pom) + dui;
-      if (dE < R(0.0)) {
+      if (dE < 0.0) {
         if (k>0 && value < 255) {
           k = min(k, 255-value);
           k = (rand()%k)+1;
           value += k;
-          dk = (real_t)k;
-          dE = (R(-2.0)*s - pom*dk)*dk;
+          dk = k;
+          dE = (-2.0*s - pom*dk)*dk;
           Sum += dE;
-        }
-        else if (k < 0 && value > 0) {
+        } else if (k < 0 && value > 0) {
           k = min(-k, value);
           k = (rand()%k)+1;
           value -= k;
-          dk = (real_t)-k;
-          dE = (R(-2.0)*s - pom*dk)*dk;
+          dk = -k;
+          dE = (-2.0*s - pom*dk)*dk;
           Sum += dE;
         }
-        image_set(hopfield->image, i, j, (real_t)value);
+        image_set(hopfield->image, i, j, value);
       }
     }
   }
   return Sum;
 }
 
-/*
- * Public functions
- */
+/* Public functions */
 
-hopfield_t* hopfield_create_mirror(hopfield_t* hopfield, convmask_t* convmask, image_t* image, lambda_t* lambdafld)
-{
+hopfield_t* hopfield_create_mirror(hopfield_t* hopfield, convmask_t* convmask, image_t* image, lambda_t* lambdafld) {
   hopfield->image = image;
   hopfield->mirror = 1;
   weights_create(&(hopfield->weights), convmask);
@@ -387,8 +373,7 @@ hopfield_t* hopfield_create_mirror(hopfield_t* hopfield, convmask_t* convmask, i
   return hopfield;
 }
 
-hopfield_t* hopfield_create_period(hopfield_t* hopfield, convmask_t* convmask, image_t* image, lambda_t* lambdafld)
-{
+hopfield_t* hopfield_create_period(hopfield_t* hopfield, convmask_t* convmask, image_t* image, lambda_t* lambdafld) {
   hopfield->image = image;
   hopfield->mirror = 0;
   weights_create(&(hopfield->weights), convmask);
@@ -397,33 +382,28 @@ hopfield_t* hopfield_create_period(hopfield_t* hopfield, convmask_t* convmask, i
   return hopfield;
 }
 
-hopfield_t* hopfield_create(hopfield_t* hopfield, convmask_t* convmask, image_t* image, lambda_t* lambdafld)
-{
-	if (hopfield->mirror) return hopfield_create_mirror(hopfield, convmask, image, lambdafld);
-	else return hopfield_create_period(hopfield, convmask, image, lambdafld);
+hopfield_t* hopfield_create(hopfield_t* hopfield, convmask_t* convmask, image_t* image, lambda_t* lambdafld) {
+  if (hopfield->mirror) return hopfield_create_mirror(hopfield, convmask, image, lambdafld);
+  else return hopfield_create_period(hopfield, convmask, image, lambdafld);
 }
 
-void hopfield_destroy(hopfield_t* hopfield)
-{
+void hopfield_destroy(hopfield_t* hopfield) {
   weights_destroy(&(hopfield->weights));
   threshold_destroy(&(hopfield->threshold));
 }
 
-real_t hopfield_iteration(hopfield_t* hopfield)
-{
-	real_t rv;
-	if (hopfield->mirror) {
-		if (hopfield->lambdafld && hopfield->lambda > 1e-8) rv = hopfield_iteration_mirror_lambda(hopfield);
-		else rv = hopfield_iteration_mirror(hopfield);
-	}
-	else {
-		if (hopfield->lambdafld && hopfield->lambda > 1e-8) rv = hopfield_iteration_period_lambda(hopfield);
-		else rv = hopfield_iteration_period(hopfield);
-	}
-	return rv;
+double hopfield_iteration(hopfield_t* hopfield) {
+  double rv;
+  if (hopfield->mirror) {
+    if (hopfield->lambdafld && hopfield->lambda > 1e-8) rv = hopfield_iteration_mirror_lambda(hopfield);
+    else rv = hopfield_iteration_mirror(hopfield);
+  } else {
+    if (hopfield->lambdafld && hopfield->lambda > 1e-8) rv = hopfield_iteration_period_lambda(hopfield);
+    else rv = hopfield_iteration_period(hopfield);
+  }
+  return rv;
 }
 
-void hopfield_set_mirror(hopfield_t* hopfield, int mirror)
-{
-	hopfield->mirror = mirror;
+void hopfield_set_mirror(hopfield_t* hopfield, int mirror) {
+  hopfield->mirror = mirror;
 }

@@ -35,49 +35,40 @@ typedef enum {
   PNM_UNKNOWN
 } PNMType;
 
-image_t* image_create(image_t* image, int x, int y)
-{
+image_t* image_create(image_t* image, int x, int y) {
   image->x = x;
   image->y = y;
-  if ((image->data = (real_t*)malloc(sizeof(real_t) * x * y)))
+  if ((image->data = (double*)malloc(sizeof(double) * x * y)))
     return image;
   return NULL;
 }
 
-image_t* image_create_copyparam(image_t* image, image_t* src)
-{
+image_t* image_create_copyparam(image_t* image, image_t* src) {
   image->x = src->x;
   image->y = src->y;
-  if ((image->data = (real_t*)malloc(sizeof(real_t) * image->x * image->y)))
+  if ((image->data = (double*)malloc(sizeof(double) * image->x * image->y)))
     return image;
   return NULL;
 }
 
-void image_init(image_t* image)
-{
+void image_init(image_t* image) {
   image->data = NULL;
 }
 
-void image_destroy(image_t* image)
-{
+void image_destroy(image_t* image) {
   free(image->data);
 }
 
-image_t* image_convolve_mirror(image_t* dst, image_t* src, convmask_t* filter)
-{
+image_t* image_convolve_mirror(image_t* dst, image_t* src, convmask_t* filter) {
   int i, j, k, l, r;
-  real_t value;
+  double value;
 
   r = filter->radius;
-  for (i = 0; i < src->x; i++)
-  {
-    for (j = 0; j < src->y; j++)
-    {
-      value = R(0.0);
-      for (k = -r; k <= r; k++)
-      {
-        for (l = -r; l <= r; l++)
-        {
+  for (i = 0; i < src->x; i++) {
+    for (j = 0; j < src->y; j++) {
+      value = 0.0;
+      for (k = -r; k <= r; k++) {
+        for (l = -r; l <= r; l++) {
           value += convmask_get(filter, k,l) * image_get_mirror(src, i-k, j-l);
         }
       }
@@ -87,21 +78,16 @@ image_t* image_convolve_mirror(image_t* dst, image_t* src, convmask_t* filter)
   return dst;
 }
 
-image_t* image_convolve_period(image_t* dst, image_t* src, convmask_t* filter)
-{
+image_t* image_convolve_period(image_t* dst, image_t* src, convmask_t* filter) {
   int i, j, k, l, r;
-  real_t value;
+  double value;
 
   r = filter->radius;
-  for (i = 0; i < src->x; i++)
-  {
-    for (j = 0; j < src->y; j++)
-    {
-      value = R(0.0);
-      for (k = -r; k <= r; k++)
-      {
-        for (l = -r; l <= r; l++)
-        {
+  for (i = 0; i < src->x; i++) {
+    for (j = 0; j < src->y; j++) {
+      value = 0.0;
+      for (k = -r; k <= r; k++) {
+        for (l = -r; l <= r; l++) {
           value += convmask_get(filter, k,l) * image_get_period(src, i-k, j-l);
         }
       }
@@ -111,33 +97,29 @@ image_t* image_convolve_period(image_t* dst, image_t* src, convmask_t* filter)
   return dst;
 }
 
-int image_load_pnm_file(image_t* imageR, image_t* imageG, image_t* imageB, int* bpp, FILE* file)
-{
+int image_load_pnm_file(image_t* imageR, image_t* imageG, image_t* imageB, int* bpp, FILE* file) {
   char buff[2];
   unsigned char bytesRGB[3];
   int c;
   int i, x, y, Y, valueR, valueG, valueB;
   unsigned char byte;
   PNMType type;
-  real_t scale;
+  double scale;
 
   if (imageR) image_init(imageR);
   if (imageG) image_init(imageG);
   if (imageB) image_init(imageB);
 
-  if (fread(buff, sizeof(buff), 1, file) != 1)
-  {
+  if (fread(buff, sizeof(buff), 1, file) != 1) {
     return -1;
   }
 
-  if (buff[0] != 'P')
-  {
+  if (buff[0] != 'P') {
     errno = EINVAL;
     return -1;
   }
 
-  switch (buff[1])
-  {
+  switch (buff[1]) {
     case '1':
       /* PBM, ascii */
       type = PBM_ASCII;
@@ -167,61 +149,52 @@ int image_load_pnm_file(image_t* imageR, image_t* imageG, image_t* imageB, int* 
       type = PNM_UNKNOWN;
       break;
   }
-  if (type == PNM_UNKNOWN)
-  {
+  if (type == PNM_UNKNOWN) {
     errno = EINVAL;
     return -1;
   }
 
-  do
-  {
+  do {
     c = getc(file);
-  }
-  while (c == '\t' || c == ' ');
+  } while (c == '\t' || c == ' ');
   if (c == '\r') c = getc(file);
-  if (c != '\n')
-  {
+  if (c != '\n') {
     errno = EINVAL;
     return -1;
   }
   c = getc(file);
-  while (c == '#')
-  {
+  while (c == '#') {
     while (((c = getc(file)) != '\n') && (c != EOF));
     if (c != EOF) c = getc(file);
   }
 
-  if (c == EOF)
-  {
+  if (c == EOF) {
     errno = EINVAL;
     return -1;
   }
   ungetc(c, file);
 
-  if (fscanf(file, "%d %d %d", &x, &y, &c) != 3)
-  {
+  if (fscanf(file, "%d %d %d", &x, &y, &c) != 3) {
     errno = EINVAL;
     return -1;
   }
-  scale = R(255.0) / (real_t)c;
+  scale = 255.0 / (double)c;
   c = getc(file);
   if (c == '\r') c = getc(file);
-  if (c != '\n')
-  {
+  if (c != '\n') {
     errno = EINVAL;
     return -1;
   }
 
   Y = y;
 
-  switch (type)
-  {
+  switch (type) {
     case PGM_ASCII:
       if (bpp) *bpp = 1;
       image_create(imageR, x, y);
       y = 0; i = 0;
       while (y < Y && fscanf(file, "%d", &valueR) == 1) {
-        image_set(imageR, i, y, scale * (real_t)valueR);
+        image_set(imageR, i, y, scale * valueR);
         i++;
         if (i >= x) {
           i = 0;
@@ -234,7 +207,7 @@ int image_load_pnm_file(image_t* imageR, image_t* imageG, image_t* imageB, int* 
       image_create(imageR, x, y);
       y = 0; i = 0;
       while (y < Y && fread(&byte, sizeof(byte), 1, file) == 1) {
-        image_set(imageR, i, y, scale * (real_t)byte);
+        image_set(imageR, i, y, scale * byte);
         i++;
         if (i >= x) {
           i = 0;
@@ -245,8 +218,7 @@ int image_load_pnm_file(image_t* imageR, image_t* imageG, image_t* imageB, int* 
     case PPM_ASCII:
       if (bpp) *bpp = 3;
       image_create(imageR, x, y);
-      if (!imageG || !imageR)
-      {
+      if (!imageG || !imageR) {
         errno = EINVAL;
         return -1;
       }
@@ -254,9 +226,9 @@ int image_load_pnm_file(image_t* imageR, image_t* imageG, image_t* imageB, int* 
       image_create(imageB, x, y);
       y = 0; i = 0;
       while (y < Y && fscanf(file, "%d %d %d", &valueR, &valueG, &valueB) == 3) {
-        image_set(imageR, i, y, scale * (real_t)valueR);
-        image_set(imageG, i, y, scale * (real_t)valueG);
-        image_set(imageB, i, y, scale * (real_t)valueB);
+        image_set(imageR, i, y, scale * (double)valueR);
+        image_set(imageG, i, y, scale * (double)valueG);
+        image_set(imageB, i, y, scale * (double)valueB);
         i++;
         if (i >= x) {
           i = 0;
@@ -267,8 +239,7 @@ int image_load_pnm_file(image_t* imageR, image_t* imageG, image_t* imageB, int* 
     case PPM_BINARY:
       if (bpp) *bpp = 3;
       image_create(imageR, x, y);
-      if (!imageG || !imageR)
-      {
+      if (!imageG || !imageR) {
         errno = EINVAL;
         return -1;
       }
@@ -276,9 +247,9 @@ int image_load_pnm_file(image_t* imageR, image_t* imageG, image_t* imageB, int* 
       image_create(imageB, x, y);
       y = 0; i = 0;
       while (y < Y && fread(&bytesRGB, sizeof(bytesRGB), 1, file) == 1) {
-        image_set(imageR, i, y, scale * (real_t)bytesRGB[0]);
-        image_set(imageG, i, y, scale * (real_t)bytesRGB[1]);
-        image_set(imageB, i, y, scale * (real_t)bytesRGB[2]);
+        image_set(imageR, i, y, scale * (double)bytesRGB[0]);
+        image_set(imageG, i, y, scale * (double)bytesRGB[1]);
+        image_set(imageB, i, y, scale * (double)bytesRGB[2]);
         i++;
         if (i >= x) {
           i = 0;
@@ -294,9 +265,7 @@ int image_load_pnm_file(image_t* imageR, image_t* imageG, image_t* imageB, int* 
   return 0;
 }
 
-
-int image_save_pnm_file(image_t* imageR, image_t* imageG, image_t* imageB, int binary, FILE* file)
-{
+int image_save_pnm_file(image_t* imageR, image_t* imageG, image_t* imageB, int binary, FILE* file) {
   int type;
   int i, j, rv, R, G, B;
   unsigned char c;
@@ -308,23 +277,17 @@ int image_save_pnm_file(image_t* imageR, image_t* imageG, image_t* imageB, int b
 
   if (fprintf(file, "P%d\n# Deblur output\n%d %d\n255", type, imageR->x, imageR->y) < 0) return -1;
 
-  switch (type)
-  {
+  switch (type) {
     case PGM_ASCII:
       chars_cnt = LINE_LEN_BORDER_PGM + 1;
-      for (j = 0; j < imageR->y; j++)
-      {
-        for (i = 0; i < imageR->x; i++)
-        {
-          R = (int)(image_get(imageR, i, j) + R(0.5));
-          if (chars_cnt > LINE_LEN_BORDER_PGM)
-          {
+      for (j = 0; j < imageR->y; j++) {
+        for (i = 0; i < imageR->x; i++) {
+          R = (int)(image_get(imageR, i, j) + 0.5);
+          if (chars_cnt > LINE_LEN_BORDER_PGM) {
             if (fprintf(file, "\n") < 0) return -1;
             chars_cnt = 0;
             rv = fprintf(file, "%d", R);
-          }
-          else
-          {
+          } else {
             rv = fprintf(file, " %d", R);
           }
           if (rv < 0) return -1;
@@ -334,32 +297,24 @@ int image_save_pnm_file(image_t* imageR, image_t* imageG, image_t* imageB, int b
       break;
     case PGM_BINARY:
       if (fprintf(file, "\n") < 0) return -1;
-      for (j = 0; j < imageR->y; j++)
-      {
-        for (i = 0; i < imageR->x; i++)
-        {
-          c = (unsigned char)(image_get(imageR, i, j) + R(0.5));
+      for (j = 0; j < imageR->y; j++) {
+        for (i = 0; i < imageR->x; i++) {
+          c = (unsigned char)(image_get(imageR, i, j) + 0.5);
           if (fwrite(&c, sizeof(c), 1, file) != 1) return -1;
         }
       }
       break;
     case PPM_ASCII:
       chars_cnt = LINE_LEN_BORDER_PPM + 1;
-      for (j = 0; j < imageR->y; j++)
-      {
-        for (i = 0; i < imageR->x; i++)
-        {
-          R = (int)(image_get(imageR, i, j) + R(0.5));
-          G = (int)(image_get(imageG, i, j) + R(0.5));
-          B = (int)(image_get(imageB, i, j) + R(0.5));
-          if (chars_cnt > LINE_LEN_BORDER_PPM)
-          {
-            if (fprintf(file, "\n") < 0) return -1;
+      for (j = 0; j < imageR->y; j++) {
+        for (i = 0; i < imageR->x; i++) {
+          R = (int)(image_get(imageR, i, j) + 0.5);
+          G = (int)(image_get(imageG, i, j) + 0.5);
+          B = (int)(image_get(imageB, i, j) + 0.5);
+          if (chars_cnt > LINE_LEN_BORDER_PPM) {
             chars_cnt = 0;
             rv = fprintf(file, "%d %d %d", R, G, B);
-          }
-          else
-          {
+          } else {
             rv = fprintf(file, " %d %d %d", R, G, B);
           }
           if (rv < 0) return -1;
@@ -369,15 +324,13 @@ int image_save_pnm_file(image_t* imageR, image_t* imageG, image_t* imageB, int b
       break;
     case PPM_BINARY:
       if (fprintf(file, "\n") < 0) return -1;
-      for (j = 0; j < imageR->y; j++)
-      {
-        for (i = 0; i < imageR->x; i++)
-        {
-          c = (unsigned char)(image_get(imageR, i, j) + R(0.5));
+      for (j = 0; j < imageR->y; j++) {
+        for (i = 0; i < imageR->x; i++) {
+          c = (unsigned char)(image_get(imageR, i, j) + 0.5);
           if (fwrite(&c, sizeof(c), 1, file) != 1) return -1;
-          c = (unsigned char)(image_get(imageG, i, j) + R(0.5));
+          c = (unsigned char)(image_get(imageG, i, j) + 0.5);
           if (fwrite(&c, sizeof(c), 1, file) != 1) return -1;
-          c = (unsigned char)(image_get(imageB, i, j) + R(0.5));
+          c = (unsigned char)(image_get(imageB, i, j) + 0.5);
           if (fwrite(&c, sizeof(c), 1, file) != 1) return -1;
         }
       }
@@ -390,84 +343,74 @@ int image_save_pnm_file(image_t* imageR, image_t* imageG, image_t* imageB, int b
   return 0;
 }
 
-int image_save_pnm(image_t* imageR, image_t* imageG, image_t* imageB, int binary, const char* name)
-{
+int image_save_pnm(image_t* imageR, image_t* imageG, image_t* imageB, int binary, const char* name) {
   int retval;
   FILE *file;
+
   file = fopen(name, "wb");
   if (file) {
     retval = image_save_pnm_file(imageR, imageG, imageB, binary, file);
     fclose(file);
-  }
-  else {
+  } else {
     retval = -1;
   }
   return retval;
 }
 
-int image_load_pnm(image_t* imageR, image_t* imageG, image_t* imageB, int* bpp, const char* name)
-{
+int image_load_pnm(image_t* imageR, image_t* imageG, image_t* imageB, int* bpp, const char* name) {
   FILE *file;
   int retval;
+
   file = fopen(name, "rb");
   if (file) {
     retval = image_load_pnm_file(imageR, imageG, imageB, bpp, file);
     fclose(file);
-  }
-  else {
+  } else {
     retval = -1;
   }
   return retval;
 }
 
-void image_load_bytes_gray(image_t* image, unsigned char* src)
-{
+void image_load_bytes_gray(image_t* image, unsigned char* src) {
   int size, i;
-  real_t *dst;
+  double *dst;
 
   size = image->x * image->y;
   dst = image->data;
-  for (i = 0; i < size; i++)
-  {
+  for (i = 0; i < size; i++) {
     *dst = *src;
     src++;
     dst++;
   }
 }
 
-void image_load_bytes_rgb(image_t* image, unsigned char* bytes, unsigned int channel)
-{
+void image_load_bytes_rgb(image_t* image, unsigned char* bytes, unsigned int channel) {
   int size, i;
   unsigned char *src;
-  real_t *dst;
+  double *dst;
 
   size = image->x * image->y;
   dst = image->data;
   src = bytes + channel;
-  for (i = 0; i < size; i++)
-  {
+  for (i = 0; i < size; i++) {
     *dst = *src;
     src += 3;
     dst++;
   }
 }
 
-real_t image_get_mirror(image_t* image, int x, int y)
-{
+double image_get_mirror(image_t* image, int x, int y) {
   return image->data[boundary_normalize_mirror(y, image->y) * image->x + boundary_normalize_mirror(x, image->x)];
 }
 
-real_t image_get_period(image_t* image, int x, int y)
-{
+double image_get_period(image_t* image, int x, int y) {
   return image->data[boundary_normalize_period(y, image->y) * image->x + boundary_normalize_period(x, image->x)];
 }
 
-void image_set(image_t* image, int x, int y, real_t value)
-{
+void image_set(image_t* image, int x, int y, double value) {
   image->data[y * image->x + x] = value;
 }
 
-real_t image_get(image_t* image, int x, int y)
-{
+double image_get(image_t* image, int x, int y) {
   return (image->data[y * image->x + x]);
 }

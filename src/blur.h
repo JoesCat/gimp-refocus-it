@@ -25,9 +25,9 @@
 
 C_DECL_BEGIN
 
-convmask_t* blur_create_defocus(convmask_t* blur, real_t radius);
-convmask_t* blur_create_gauss(convmask_t* blur, real_t variance);
-convmask_t* blur_create_motion(convmask_t* blur, real_t radius, real_t angle);
+convmask_t* blur_create_defocus(convmask_t* blur, double radius);
+convmask_t* blur_create_gauss(convmask_t* blur, double variance);
+convmask_t* blur_create_motion(convmask_t* blur, double radius, double angle);
 
 C_DECL_END
 

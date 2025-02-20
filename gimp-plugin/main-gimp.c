@@ -639,7 +639,7 @@ static void hopfield_data_save()
 		{
 			for (x = 0; x < image_parameters.sel_width; x++)
 			{
-				*ptr = (guchar)(image_get(&hopfield.imageR, x, y) + R(0.5));
+				*ptr = (guchar)(image_get(&hopfield.imageR, x, y) + 0.5);
 				ptr += addinc;
 			}
 		}
@@ -652,9 +652,9 @@ static void hopfield_data_save()
 		{
 			for (x = 0; x < image_parameters.sel_width; x++)
 			{
-				*(ptr++) = (guchar)(image_get(&hopfield.imageR, x, y) + R(0.5));
-				*(ptr++) = (guchar)(image_get(&hopfield.imageG, x, y) + R(0.5));
-				*ptr = (guchar)(image_get(&hopfield.imageB, x, y) + R(0.5));
+				*(ptr++) = (guchar)(image_get(&hopfield.imageR, x, y) + 0.5);
+				*(ptr++) = (guchar)(image_get(&hopfield.imageG, x, y) + 0.5);
+				*ptr = (guchar)(image_get(&hopfield.imageB, x, y) + 0.5);
 				ptr += addinc;
 			}
 		}
@@ -748,7 +748,7 @@ static void preview_fetch_hopfield()
 		{
 			for (x = preview.x; x < w; x++)
 			{
-				byte = (guchar)(image_get(&hopfield.imageR, x, y) + R(0.5));
+				byte = (guchar)(image_get(&hopfield.imageR, x, y) + 0.5);
 				*(ptr++) = byte;
 				*(ptr++) = byte;
 				*(ptr++) = byte;
@@ -1275,9 +1275,9 @@ static void compute(int iterations)
 	hopfield_data_load();
 	preview_update();
 
-	blur_create_defocus(&defoc, (real_t)input_parameters.radius);
-	blur_create_gauss(&gauss, (real_t)input_parameters.gauss);
-	blur_create_motion(&motion, (real_t)input_parameters.motion, (real_t)input_parameters.mot_angle);
+	blur_create_defocus(&defoc, (double)input_parameters.radius);
+	blur_create_gauss(&gauss, (double)input_parameters.gauss);
+	blur_create_motion(&motion, (double)input_parameters.motion, (double)input_parameters.mot_angle);
 	convmask_convolve(&blur, &defoc, &gauss);
 	convmask_convolve(&hopfield.blur, &blur, &motion);
 	convmask_destroy(&gauss);
@@ -1286,7 +1286,7 @@ static void compute(int iterations)
 
 	if (is_smooth)
 	{
-		blur_create_gauss(&hopfield.filter, R(1.0));
+		blur_create_gauss(&hopfield.filter, 1.0);
 		lambda_set_mirror(&hopfield.lambdafldR, is_mirror);
 		lambda_set_nl(&hopfield.lambdafldR, TRUE);
 		lambda_create(&hopfield.lambdafldR, image_parameters.sel_width, image_parameters.sel_height, lambda_min, input_parameters.winsize, &hopfield.filter); //memfull?

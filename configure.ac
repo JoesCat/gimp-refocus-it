@@ -83,22 +83,11 @@ if test x"${have_libm}" != xyes; then
     AC_MSG_FAILURE([ERROR: Please install the Math library and math.h],[1])
 fi
 
-dnl GIMP PLUG-IN
-AC_ARG_WITH([gimp], AS_HELP_STRING([--with-gimp],[Install GIMP plug-in version of refocus-it @<:@default=yes@:>]), with_gimp=$withval, with_gimp=yes)
-AM_CONDITIONAL(REFOCUS_GIMP, test x$with_gimp = xyes)
-
 dnl DEBUG
 AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug],[Enable debugging @<:@default=no@:>]), , enable_debug=no)
 
-dnl DOUBLES
-AC_ARG_ENABLE([doubles], AS_HELP_STRING([--enable-doubles],[Use doubles instead of floats @<:@default=no@:>]), enable_doubles=$enableval, enable_doubles=no)
-
 if test x$enable_debug = xno ; then
-	AC_DEFINE(NDEBUG,, Enable debugging)
-fi
-
-if test x$enable_doubles = xyes ; then
-	AC_DEFINE(USE_DOUBLES,, Use doubles instead of floats)
+  AC_DEFINE(NDEBUG,, Enable debugging)
 fi
 
 dnl i18n stuff
@@ -147,30 +136,28 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS(sqrt)
 
 dnl Gimp-plugin
-if test x$with_gimp = xyes ; then
-	PKG_CHECK_MODULES(GIMP, gimp-2.0 gimpui-2.0)
+PKG_CHECK_MODULES(GIMP, gimp-2.0 gimpui-2.0)
 
-	AC_SUBST(GIMP_CFLAGS)
-	AC_SUBST(GIMP_LIBS)
+AC_SUBST(GIMP_CFLAGS)
+AC_SUBST(GIMP_LIBS)
 
-	GIMP_LIBDIR=`$PKG_CONFIG --variable=gimplibdir gimp-2.0`
-	AC_SUBST(GIMP_LIBDIR)
+GIMP_LIBDIR=`$PKG_CONFIG --variable=gimplibdir gimp-2.0`
+AC_SUBST(GIMP_LIBDIR)
 
-	DATADIR='${datadir}/${PLUGIN_NAME}'
+DATADIR='${datadir}/${PLUGIN_NAME}'
 
-	AC_SUBST(DATADIR)
+AC_SUBST(DATADIR)
 
-	AC_MSG_CHECKING([if GTK+ is version 2.3.0 or newer])
-	if $PKG_CONFIG --atleast-version=2.3.0 gtk+-2.0; then
-		have_gtk_2_3=yes
-	else
-		have_gtk_2_3=no
-	fi
-	AC_MSG_RESULT($have_gtk_2_3)
+AC_MSG_CHECKING([if GTK+ is version 2.3.0 or newer])
+if $PKG_CONFIG --atleast-version=2.3.0 gtk+-2.0; then
+  have_gtk_2_3=yes
+else
+  have_gtk_2_3=no
+fi
+AC_MSG_RESULT($have_gtk_2_3)
 
-	if test "x$have_gtk_2_3" != "xyes"; then
-		CPPFLAGS="$CPPFLAGS -DG_DISABLE_DEPRECATED -DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED"
-	fi
+if test "x$have_gtk_2_3" != "xyes"; then
+  CPPFLAGS="$CPPFLAGS -DG_DISABLE_DEPRECATED -DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED"
 fi
 
 #--------------------------------------------------------------------------

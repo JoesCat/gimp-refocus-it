@@ -32,13 +32,13 @@ typedef struct {
   int         x;
   int         y;
   int         winsize;
-  real_t      minlambda;
-  real_t     *lambda;
+  double      minlambda;
+  double     *lambda;
   int         mirror;
   int         nl;
 } lambda_t;
 
-lambda_t* lambda_create(lambda_t* lambda, int x, int y, real_t minlambda, int winsize, convmask_t* filter);
+lambda_t* lambda_create(lambda_t* lambda, int x, int y, double minlambda, int winsize, convmask_t* filter);
 void lambda_destroy(lambda_t* lambda);
 
 lambda_t* lambda_calculate_period(lambda_t* lambda, image_t* image);
@@ -50,8 +50,8 @@ lambda_t* lambda_calculate(lambda_t* lambda, image_t* image);
 void lambda_set_mirror(lambda_t* lambda, int mirror);
 void lambda_set_nl(lambda_t* lambda, int nl);
 
-real_t lambda_get_mirror(lambda_t* lambda, int x, int y);
-real_t lambda_get_period(lambda_t* lambda, int x, int y);
+double lambda_get_mirror(lambda_t* lambda, int x, int y);
+double lambda_get_period(lambda_t* lambda, int x, int y);
 
 C_DECL_END
 
