@@ -1,115 +1,115 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the https://github.com/JoesCat/gimp-refocus-it/issues package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# This file is distributed under the same license as the gimp-refocus-it package.
+# Joe Da Silva <digital@joescat.com>, 2025.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: https://github.com/JoesCat/gimp-refocus-it/issues 2.1\n"
+"Project-Id-Version: refocus-it 2.1\n"
 "Report-Msgid-Bugs-To: https://github.com/JoesCat/gimp-refocus-it/issues\n"
 "POT-Creation-Date: 2025-02-19 21:50-0800\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2025-02-20 20:12-0800\n"
+"Last-Translator: Joe Da Silva <digital@joescat.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"Language: pt\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #: ../gimp-plugin/main-gimp.c:374
 msgid "Iterative refocus..."
-msgstr ""
+msgstr "Refocalização iterativa..."
 
 #: ../gimp-plugin/main-gimp.c:381
 msgid "Iterative refocus."
-msgstr ""
+msgstr "Refocalização iterativa."
 
 #: ../gimp-plugin/main-gimp.c:382
 msgid "This plug-in iteratively refocuses a defocused image."
-msgstr ""
+msgstr "Este plug-in refocaliza iterativamente uma imagem desfocada."
 
 #: ../gimp-plugin/main-gimp.c:489
 msgid "mirror boundary"
-msgstr ""
+msgstr "borda é espelhada"
 
 #: ../gimp-plugin/main-gimp.c:490
 msgid "periodical boundary"
-msgstr ""
+msgstr "borda é periódica"
 
 #: ../gimp-plugin/main-gimp.c:846
 msgid "Degradation"
-msgstr ""
+msgstr "Degradação"
 
 #. blur radius
 #: ../gimp-plugin/main-gimp.c:851
 msgid "Radius:"
-msgstr ""
+msgstr "Raio:"
 
 #. gaussian blur
 #: ../gimp-plugin/main-gimp.c:861
 msgid "Gauss:"
-msgstr ""
+msgstr "Gauss:"
 
 #. motion blur
 #: ../gimp-plugin/main-gimp.c:871
 msgid "Motion size:"
-msgstr ""
+msgstr "Tamanho do movimento:"
 
 #. motion angle
 #: ../gimp-plugin/main-gimp.c:881
 msgid "Motion angle:"
-msgstr ""
+msgstr "Ângulo de movimento:"
 
 #. noise reduction
 #: ../gimp-plugin/main-gimp.c:891
 msgid "Noise:"
-msgstr ""
+msgstr "Ruído:"
 
 #. iterations
 #: ../gimp-plugin/main-gimp.c:901 ../gimp-plugin/main-gimp.c:1113
 msgid "Iterations:"
-msgstr ""
+msgstr "Iterações:"
 
 #. boundary
 #: ../gimp-plugin/main-gimp.c:911
 msgid "Boundary:"
-msgstr ""
+msgstr "Borda:"
 
 #: ../gimp-plugin/main-gimp.c:935
 msgid "Area smoothing"
-msgstr ""
+msgstr "Suavização de área"
 
 #: ../gimp-plugin/main-gimp.c:939
 msgid "Smoothness:"
-msgstr ""
+msgstr "Suavidade:"
 
 #: ../gimp-plugin/main-gimp.c:948
 msgid "Area size:"
-msgstr ""
+msgstr "Tamanho da área:"
 
 #: ../gimp-plugin/main-gimp.c:957
 msgid "Adaptive smoothing:"
-msgstr ""
+msgstr "Suavização adaptativa:"
 
 #: ../gimp-plugin/main-gimp.c:1040
 msgid "Motion direction"
-msgstr ""
+msgstr "Direção do movimento"
 
 #: ../gimp-plugin/main-gimp.c:1129 ../gimp-plugin/main-gimp.c:1147
 msgid "Preview"
-msgstr ""
+msgstr "Visualização"
 
 #: ../gimp-plugin/main-gimp.c:1142
 msgid "Iterative Refocus"
-msgstr ""
+msgstr "Refocalização iterativa"
 
 #: ../gimp-plugin/main-gimp.c:1210
 msgid "Refocusing..."
-msgstr ""
+msgstr "Reorientando..."
 
 #. INIT_I18N_UI();
 #: ../gimp-plugin/main-gimp.c:1459
 #, c-format
 msgid "Iterative Refocus - %s"
-msgstr ""
+msgstr "Refocalização iterativa - %s"

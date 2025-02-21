@@ -9,3 +9,5 @@ noinst_HEADERS		= blur.h boundary.h convmask.h \
 			  hopfield.h threshold.h weights.h \
 			  lambda.h image.h compiler.h \
 			  gettext.h
+EXTRA_DIST		= ${noinst_HEADERS}
+nodist_EXTRA_DATA	= .dep .lib

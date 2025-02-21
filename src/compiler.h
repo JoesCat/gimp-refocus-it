@@ -24,6 +24,7 @@
 #include "refocus-it-config.h"
 #endif
 
+#include <stddef.h>
 #include <math.h>
 
 #ifndef M_PI

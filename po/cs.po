@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: refocus-it 2.0.0\n"
-"Report-Msgid-Bugs-To: https://github.com/JoesCat/gimp3-refocus-it/issues\n"
-"POT-Creation-Date: 2004-07-19 13:34+0200\n"
+"Report-Msgid-Bugs-To: https://github.com/JoesCat/gimp-refocus-it/issues\n"
+"POT-Creation-Date: 2025-02-19 21:50-0800\n"
 "PO-Revision-Date: 2024-10-15 20:49-0700\n"
 "Last-Translator: Lukas Kunc <Lukas.Kunc@seznam.cz>\n"
 "Language-Team: Lukas Kunc <Lukas.Kunc@seznam.cz>\n"
@@ -16,514 +16,99 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: cmd-line/getopt.c:693
-#, c-format
-msgid "%s: option `%s' is ambiguous\n"
-msgstr ""
-
-#: cmd-line/getopt.c:718
-#, c-format
-msgid "%s: option `--%s' doesn't allow an argument\n"
-msgstr ""
-
-#: cmd-line/getopt.c:723
-#, c-format
-msgid "%s: option `%c%s' doesn't allow an argument\n"
-msgstr ""
-
-#: cmd-line/getopt.c:741 cmd-line/getopt.c:914
-#, c-format
-msgid "%s: option `%s' requires an argument\n"
-msgstr ""
-
-#. --option
-#: cmd-line/getopt.c:770
-#, fuzzy, c-format
-msgid "%s: unrecognized option `--%s'\n"
-msgstr "%s: neznámá volba '-%s'\n"
-
-#. +option or -option
-#: cmd-line/getopt.c:774
-#, fuzzy, c-format
-msgid "%s: unrecognized option `%c%s'\n"
-msgstr "%s: neznámá volba '%s'\n"
-
-#. 1003.2 specifies the format of this message.
-#: cmd-line/getopt.c:800
-#, fuzzy, c-format
-msgid "%s: illegal option -- %c\n"
-msgstr "%s: neznámá volba '-%s'\n"
-
-#: cmd-line/getopt.c:803
-#, fuzzy, c-format
-msgid "%s: invalid option -- %c\n"
-msgstr "%s: neznámá volba '-%s'\n"
-
-#. 1003.2 specifies the format of this message.
-#: cmd-line/getopt.c:833 cmd-line/getopt.c:963
-#, c-format
-msgid "%s: option requires an argument -- %c\n"
-msgstr ""
-
-#: cmd-line/getopt.c:880
-#, c-format
-msgid "%s: option `-W %s' is ambiguous\n"
-msgstr ""
-
-#: cmd-line/getopt.c:898
-#, c-format
-msgid "%s: option `-W %s' doesn't allow an argument\n"
-msgstr ""
-
-#: cmd-line/main-cmd.c:165
-#, c-format
-msgid "%s: expected value for parameter '%s' -%s\n"
-msgstr "%s: byla očekávána hodnota pro parametr '%s' -%s\n"
-
-#: cmd-line/main-cmd.c:170
-#, c-format
-msgid "%s: expected argument for option -%s\n"
-msgstr "%s: byl očekáván argument pro volbu -%s\n"
-
-#: cmd-line/main-cmd.c:178
-#, c-format
-msgid "%s: expected value of type '%s' for parameter '%s' -%s\n"
-msgstr "%s: byla očekávána hodnota typu '%s' pro parametr '%s' -%s\n"
-
-#: cmd-line/main-cmd.c:197
-#, c-format
-msgid "parameter '%s' -%s out of range (%f, %f)\n"
-msgstr "parameter '%s' -%s mimo rozsah (%f, %f)\n"
-
-#: cmd-line/main-cmd.c:225
-#, c-format
-msgid "parameter '%s' -%s out of range (%d, %d)\n"
-msgstr "parameter '%s' -%s mimo rozsah (%d, %d)\n"
-
-#: cmd-line/main-cmd.c:247
-#, c-format
-msgid "expected valid value for parameter '%s' -%s, got '%s'\n"
-msgstr ""
-"byla očekávána platná hodnota pro parametr '%s' -%s, bylo zadáno '%s'\n"
-
-#: cmd-line/main-cmd.c:277
-#, c-format
-msgid ""
-"Iterative refocus - refocus images acquired with defocussed camera\n"
-"or blurred with gaussian blur (astronomy). Implemented via\n"
-"minimization of error function using Hopfield neural network.\n"
-"\n"
-"Usage: %s [OPTION] ...\n"
-"Options:\n"
-"   -r <defocus radius>, --radius=<defocus radius>\n"
-"                       real number from interval <0.0, 32.0>\n"
-"   -g <gaussian blur variance>, --gauss=<gaussian blur variance>\n"
-"                       real number from <0.0, 32.0>\n"
-msgstr ""
-"Iterativní doostření - doostřuje obrázky pořízené rozostřenou optikou,\n"
-"nebo rozostřené gaussovským rozostřením (v astronomii). Implementováno\n"
-"s pomocí algoritmu minimizace chybové funkce Hopfieldovou neuronovou sítí.\n"
-"\n"
-"Použití: %s [VOLBA] ...\n"
-"Volby:\n"
-"   -r <poloměr rozostření>, --radius=<poloměr rozostření>\n"
-"                       reálné číslo z intervalu <0.0, 32.0>\n"
-"   -g <rozptyl gaussovského rozostření>, --gauss=<rozptyl ...>\n"
-"                       reálné číslo z intervalu <0.0, 32.0>\n"
-
-#: cmd-line/main-cmd.c:289
-#, c-format
-msgid ""
-"   -n <noise reduction factor>, --noise=<noise reduction factor>\n"
-"                       real number from <0.0, %.1f>\n"
-"   -b <boundary conditions>, --boundary=<boundary conditions>\n"
-"                       'mirror' or 'period'\n"
-"   -s <area smoothness>, --smoothness=<area smoothness>\n"
-"                       real number from <0.0, %.1f>\n"
-msgstr ""
-"   -n <míra potlačení šumu>, --noise=<míra potlačení šumu>\n"
-"                       reálné číslo z intervalu <0.0, %.1f>\n"
-"   -b <okrajové podmínky>, --boundary=<okrajové podmínky>\n"
-"                       'mirror' nebo 'period'\n"
-"   -s <hladkost oblastí>, --smoothness=<hladkost oblastí>\n"
-"                       reálné číslo z intervalu <0.0, %.1f>\n"
-
-#: cmd-line/main-cmd.c:298
-#, c-format
-msgid ""
-"   -a, --non-adaptive\n"
-"                       do not use adaptive adjustments of noise\n"
-"                       reduction\n"
-"   -m <n>, --intermediate=<n>\n"
-"                       save result of every n-th iteration\n"
-"   -c, --ascii-pnm\n"
-"                       use binary PNM files for output\n"
-"   -v <level>, --verbosity=<level>\n"
-"                       set verbosity level 0..8\n"
-"   -w <window size>, --window=<window size>\n"
-"                       size of window for area smoothing 1..16\n"
-msgstr ""
-"   -a, --non-adaptive\n"
-"                       nepoužije adaptivní potlačení šumu\n"
-"   -m <n>, --intermediate=<n>\n"
-"                       ukládej každý n-tý mezivýsledek\n"
-"   -c, --ascii-pnm\n"
-"                       použij binární PNM pro výstup\n"
-"   -v <úroveň>, --verbosity=<úroveň>\n"
-"                       nastaví míru upovídanosti 0..8\n"
-"   -w <velikost okna>, --window=<window size>\n"
-"                       velikost okna pro vyhlazování oblastí 1..16\n"
-
-#: cmd-line/main-cmd.c:310
-#, c-format
-msgid ""
-"   -i <number of iterations>, --iterations=<number of iterations>\n"
-"                       number of iterations to compute\n"
-"   -f <file name>, --file=<file name>\n"
-"                       name of file with blurred image,\n"
-"                       if no file name is given, input image is\n"
-"                       read from stdin and output image(s) is\n"
-"                       (are) written to stdout\n"
-msgstr ""
-"   -i <počet iterací>, --iterations=<počet iterací>\n"
-"                       počet iterací výpočtu\n"
-"   -f <jméno souboru>, --file=<jméno souboru>\n"
-"                       jméno souboru s rozostřeným obrázkem,\n"
-"                       pokud není zadáno jméno souboru, obrázek\n"
-"                       je načten ze standardního vstupu a výsledek\n"
-"                       je zapsán na standardní výstup\n"
-
-#: cmd-line/main-cmd.c:318
-#, c-format
-msgid ""
-"   -h, --help\n"
-"                       print this help and exit\n"
-"   -V, --version\n"
-"                       print version information and exit\n"
-msgstr ""
-"   -h, --help\n"
-"                       vytiskne tuto nápovědu a skončí\n"
-"   -V, --version\n"
-"                       vytiskne verzi programu a skončí\n"
-
-#: cmd-line/main-cmd.c:326
-#, c-format
-msgid ""
-"Iterative refocus - %s version %s\n"
-"Written by Lukas Kunc\n"
-"\n"
-"Copyright (C) 2004 Free Software Foundation, Inc.\n"
-"This is free software; see the source for copying conditions.There is NO\n"
-"warranty; not even for MERCHANTABILITY or FITNESS FORA PARTICULAR PURPOSE.\n"
-msgstr ""
-"Iterativní doostřování - %s verze %s\n"
-"Napsal Lukáš Kunc\n"
-"\n"
-"Copyright (C) 2004 Free Software Foundation, Inc.\n"
-"Toto je volné programové vybavení; podmínky pro kopírování a rozšiřování\n"
-"naleznete ve zdrojových textech. Toto programové vybavení je zcela BEZ "
-"ZÁRUKY,\n"
-"a to i bez záruky PRODEJNOSTI nebo VHODNOSTI PRO NĚJAKÝ KONKRÉTNÍ ÚČEL.\n"
-
-#: cmd-line/main-cmd.c:364
-msgid "defocus radius"
-msgstr "poloměr rozostření"
-
-#: cmd-line/main-cmd.c:367
-msgid "gaussian blur variance"
-msgstr "rozptyl gaussovského rozostření"
-
-#: cmd-line/main-cmd.c:370 cmd-line/main-cmd.c:605
-msgid "noise reduction"
-msgstr "potlačení šumu"
-
-#: cmd-line/main-cmd.c:373
-msgid "boundary"
-msgstr "okraje"
-
-#: cmd-line/main-cmd.c:376
-msgid "smoothness"
-msgstr "hladkost"
-
-#: cmd-line/main-cmd.c:382
-msgid "save every n-th result"
-msgstr "ulož každý n-tý mezivýsledek"
-
-#: cmd-line/main-cmd.c:388
-msgid "verbosity level"
-msgstr "upovídanost"
-
-#: cmd-line/main-cmd.c:391
-msgid "window size"
-msgstr "velikost okna"
-
-#: cmd-line/main-cmd.c:394
-msgid "number of iterations"
-msgstr "počet iterací"
-
-#: cmd-line/main-cmd.c:397
-msgid "file name"
-msgstr "jméno souboru"
-
-#: cmd-line/main-cmd.c:411
-#, c-format
-msgid "%s: unrecognized option '-%s'\n"
-msgstr "%s: neznámá volba '-%s'\n"
-
-#: cmd-line/main-cmd.c:421
-#, c-format
-msgid "%s: error processing options\n"
-msgstr "%s: chyba při zpracování volby\n"
-
-#: cmd-line/main-cmd.c:428
-#, c-format
-msgid "%s: unrecognized option '%s'\n"
-msgstr "%s: neznámá volba '%s'\n"
-
-#: cmd-line/main-cmd.c:433
-#, c-format
-msgid "Try '%s -h' for more information\n"
-msgstr "Zkuste '%s' -h pro více informací\n"
-
-#: cmd-line/main-cmd.c:438
-#, c-format
-msgid "defocus blur radius: %f"
-msgstr "poloměr rozostření: %f"
-
-#: cmd-line/main-cmd.c:439
-#, c-format
-msgid "gaussian blur variance: %f"
-msgstr "rozptyl gaussovského rozostření: %f"
-
-#: cmd-line/main-cmd.c:440
-#, c-format
-msgid "noise reduction: %f"
-msgstr "potlačení šumu: %f"
-
-#: cmd-line/main-cmd.c:441
-#, c-format
-msgid "area smoothness: %f"
-msgstr "hladkost oblasti: %f"
-
-#: cmd-line/main-cmd.c:442
-#, c-format
-msgid "area smoothing window size: %d"
-msgstr "velikost okna pro vyhlazování oblastí: %d"
-
-#: cmd-line/main-cmd.c:443
-#, c-format
-msgid "number of iterations: %d"
-msgstr "počet iterací: %d"
-
-#: cmd-line/main-cmd.c:444
-#, c-format
-msgid "boundaries: %s"
-msgstr "okraje: %s"
-
-#: cmd-line/main-cmd.c:445
-#, c-format
-msgid "adaptive noise reduction: %s"
-msgstr "adaptivní potlačení šumu: %s"
-
-#: cmd-line/main-cmd.c:445 cmd-line/main-cmd.c:449
-msgid "yes"
-msgstr "ano"
-
-#: cmd-line/main-cmd.c:445 cmd-line/main-cmd.c:449
-msgid "no"
-msgstr "ne"
-
-#: cmd-line/main-cmd.c:446
-#, c-format
-msgid "save intermediate results: %d"
-msgstr "ukládat mezivýsledky: %d"
-
-#: cmd-line/main-cmd.c:447
-#, c-format
-msgid "input file: %s"
-msgstr "vstupní soubor: %s"
-
-#: cmd-line/main-cmd.c:448
-#, c-format
-msgid "verbosity: %d"
-msgstr "upovídanost: %d"
-
-#: cmd-line/main-cmd.c:449
-#, c-format
-msgid "use binary PNM: %s"
-msgstr "používám binární PNM: %s"
-
-#: cmd-line/main-cmd.c:460
-#, c-format
-msgid "%s: failed to load PNM file '%s': %s\n"
-msgstr "%s: selhalo načtení PNM souboru '%s': %s\n"
-
-#: cmd-line/main-cmd.c:470
-#, c-format
-msgid "%s: failed to read PNM file from stdin: %s\n"
-msgstr "%s: selhalo načtení PNM souboru ze standardního vstupu: %s\n"
-
-#: cmd-line/main-cmd.c:514
-#, c-format
-msgid "saving file %s"
-msgstr "ukládám soubor %s"
-
-#: cmd-line/main-cmd.c:518
-#, c-format
-msgid "%s: failed to save PNM file '%s': %s\n"
-msgstr "%s: selhal zápis PNM souboru '%s': %s\n"
-
-#: cmd-line/main-cmd.c:528
-msgid "saving to stdout"
-msgstr "ukládám na standardní výstup"
-
-#: cmd-line/main-cmd.c:529
-#, c-format
-msgid "%s: failed to write PNM file to stdout: %s\n"
-msgstr "%s: selhal zápis PNM souboru na standardní výstup: %s\n"
-
-#: cmd-line/main-cmd.c:561
-#, c-format
-msgid "%5.1f%% completed"
-msgstr "%5.1f%% hotovo"
-
-#: cmd-line/main-cmd.c:588
-msgid "mirror boundaries"
-msgstr "zrcadlové okraje"
-
-#: cmd-line/main-cmd.c:592
-msgid "periodical boundaries"
-msgstr "periodické okraje"
-
-#: cmd-line/main-cmd.c:600
-msgid "adaptive noise reduction"
-msgstr "adaptivní potlačení šumu"
-
-#: cmd-line/main-cmd.c:610
-msgid "RGB picture"
-msgstr "RGB obrázek"
-
-#: cmd-line/main-cmd.c:615
-msgid "gray picture"
-msgstr "šedotónový obrázek"
-
-#: cmd-line/main-cmd.c:697
-msgid "starting iterations"
-msgstr "spouštím iterace"
-
-#: cmd-line/main-cmd.c:729
-msgid "finished iterations"
-msgstr "iterace ukončeny"
-
-#: cmd-line/main-cmd.c:749
-msgid "computation finished"
-msgstr "výpočet ukončen"
-
-#: cmd-line/main-cmd.c:766
-msgid "processed input parameters"
-msgstr "zpracování vstupních parametrů"
-
-#: cmd-line/main-cmd.c:768
-msgid "data initialized"
-msgstr "data inicializována"
-
-#: cmd-line/main-cmd.c:771
-msgid "data destroyed"
-msgstr "data dealokována"
-
-#: gimp-plugin/main-gimp.c:374
+#: ../gimp-plugin/main-gimp.c:374
 msgid "Iterative refocus..."
 msgstr "Iterativní doostření..."
 
-#: gimp-plugin/main-gimp.c:381
+#: ../gimp-plugin/main-gimp.c:381
 msgid "Iterative refocus."
 msgstr "Iterativní doostření."
 
-#: gimp-plugin/main-gimp.c:382
+#: ../gimp-plugin/main-gimp.c:382
 msgid "This plug-in iteratively refocuses a defocused image."
 msgstr "Tento plug-in iterativně doostřuje rozostřený obrázek."
 
-#: gimp-plugin/main-gimp.c:489
+#: ../gimp-plugin/main-gimp.c:489
 msgid "mirror boundary"
 msgstr "zrcadlové okraje"
 
-#: gimp-plugin/main-gimp.c:490
+#: ../gimp-plugin/main-gimp.c:490
 msgid "periodical boundary"
 msgstr "periodické okraje"
 
-#: gimp-plugin/main-gimp.c:840
+#: ../gimp-plugin/main-gimp.c:846
 msgid "Degradation"
 msgstr "Degradace"
 
 #. blur radius
-#: gimp-plugin/main-gimp.c:845
+#: ../gimp-plugin/main-gimp.c:851
 msgid "Radius:"
 msgstr "Poloměr rozostření:"
 
 #. gaussian blur
-#: gimp-plugin/main-gimp.c:855
+#: ../gimp-plugin/main-gimp.c:861
 msgid "Gauss:"
 msgstr "Gaussovo rozostření:"
 
 #. motion blur
-#: gimp-plugin/main-gimp.c:865
+#: ../gimp-plugin/main-gimp.c:871
 msgid "Motion size:"
 msgstr "Velikost pohybu:"
 
 #. motion angle
-#: gimp-plugin/main-gimp.c:875
+#: ../gimp-plugin/main-gimp.c:881
 msgid "Motion angle:"
 msgstr "Úhel pohybu:"
 
 #. noise reduction
-#: gimp-plugin/main-gimp.c:885
+#: ../gimp-plugin/main-gimp.c:891
 msgid "Noise:"
 msgstr "Šum:"
 
 #. iterations
-#: gimp-plugin/main-gimp.c:895 gimp-plugin/main-gimp.c:1107
+#: ../gimp-plugin/main-gimp.c:901 ../gimp-plugin/main-gimp.c:1113
 msgid "Iterations:"
 msgstr "Počet iterací:"
 
 #. boundary
-#: gimp-plugin/main-gimp.c:905
+#: ../gimp-plugin/main-gimp.c:911
 msgid "Boundary:"
 msgstr "Okraje:"
 
-#: gimp-plugin/main-gimp.c:929
+#: ../gimp-plugin/main-gimp.c:935
 msgid "Area smoothing"
 msgstr "Vyhlazováni oblastí"
 
-#: gimp-plugin/main-gimp.c:933
+#: ../gimp-plugin/main-gimp.c:939
 msgid "Smoothness:"
 msgstr "Hladkost"
 
-#: gimp-plugin/main-gimp.c:942
+#: ../gimp-plugin/main-gimp.c:948
 msgid "Area size:"
 msgstr "Velikost oblasti:"
 
-#: gimp-plugin/main-gimp.c:951
+#: ../gimp-plugin/main-gimp.c:957
 msgid "Adaptive smoothing:"
 msgstr "Adaptivní vyhlazování:"
 
-#: gimp-plugin/main-gimp.c:1034
+#: ../gimp-plugin/main-gimp.c:1040
 msgid "Motion direction"
 msgstr "Směr pohybu"
 
-#: gimp-plugin/main-gimp.c:1123 gimp-plugin/main-gimp.c:1141
+#: ../gimp-plugin/main-gimp.c:1129 ../gimp-plugin/main-gimp.c:1147
 msgid "Preview"
 msgstr "Náhled"
 
-#: gimp-plugin/main-gimp.c:1136
+#: ../gimp-plugin/main-gimp.c:1142
 msgid "Iterative Refocus"
 msgstr "Iterativní doostření"
 
-#: gimp-plugin/main-gimp.c:1204
+#: ../gimp-plugin/main-gimp.c:1210
 msgid "Refocusing..."
 msgstr "Doostřuji..."
 
 #. INIT_I18N_UI();
-#: gimp-plugin/main-gimp.c:1453
+#: ../gimp-plugin/main-gimp.c:1459
 #, c-format
 msgid "Iterative Refocus - %s"
 msgstr "Iterativní doostření - %s"

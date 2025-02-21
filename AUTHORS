@@ -1,5 +1,10 @@
-This plug-in and command-line version of refocus-it was written by
+This plug-in version of refocus-it was written by
 Lukas Kunc <Lukas.Kunc@seznam.cz>.
 
 Some of the code in the plug-in was borrowed from the Gimp Sharpen
 plug-in by Michael Sweet and from Gimp Refocus blugin by Ernst Lippe.
+This is also GPL2+, and thanks to several other Authors.
+
+2024 bugfixes added to get refocus-it running on gimp 2.10+ by
+Jose da Silva
+

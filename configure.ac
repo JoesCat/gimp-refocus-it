@@ -1,5 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
+# Copyright (C) 2025 by Jose Da Silva
+
 AC_PREREQ(2.69)
 
 dnl Name your plug-in here
@@ -7,7 +9,7 @@ m4_define([plugin_name], [refocus-it])
 
 dnl These two define the plug-in version number
 m4_define([plugin_major_version], [2])
-m4_define([plugin_minor_version], [0])
+m4_define([plugin_minor_version], [1])
 
 m4_define([plugin_version], [plugin_major_version.plugin_minor_version])
 m4_define([plugin_package_name], [gimp-refocus-it])
@@ -115,14 +117,6 @@ AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE", [The gettext translation
 if test x"${have_gettext}" = xyes; then
   AC_DEFINE([HAVE_GETTEXT],1,[Enable use of local languages])
 fi
-SNIPPET2='
-gimplocaledir = $(localedir)
-ifeq ($(shell id -u),0)
-  gimplocaledir = $(LOCALEDIR)
-endif
-'
-AC_SUBST([SNIPPET2])
-AM_SUBST_NOTMAKE([SNIPPET2])
 
 AC_CHECK_HEADERS([stdlib.h string.h strings.h])
 
@@ -141,8 +135,15 @@ PKG_CHECK_MODULES(GIMP, gimp-2.0 gimpui-2.0)
 AC_SUBST(GIMP_CFLAGS)
 AC_SUBST(GIMP_LIBS)
 
+# Pass GIMP_LIBDIR to automake for default GIMP plug-ins directory
+GIMP_GIMPLIBDIR=`$PKG_CONFIG --variable=gimplibdir gimp-2.0`
+# Seems that gimp does not follow libdir of the distro, so just replacing prefix
 GIMP_LIBDIR=`$PKG_CONFIG --variable=gimplibdir gimp-2.0`
 AC_SUBST(GIMP_LIBDIR)
+GIMP_PREFIX=`$PKG_CONFIG --variable=exec_prefix gimp-2.0`
+GIMP_RELATIVE=${GIMP_GIMPLIBDIR#$GIMP_PREFIX}
+GIMP_BINDIR=\${exec_prefix}"$GIMP_RELATIVE"
+AC_SUBST(GIMP_BINDIR)
 
 DATADIR='${datadir}/${PLUGIN_NAME}'
 

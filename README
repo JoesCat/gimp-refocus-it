@@ -15,33 +15,20 @@ This plug-in has a preview that helps you select the best parameters.
 
 This version of the plug-in needs the Gtk+-2.2.2 libraries or newer.
 
-There is also commdan-line version (refocus-it-cmd) for users which cannot use
-GIMP or need batch processing. Type refocus-it-cmd --help for more information.
-
 ---
 INSTALLATION
 
-If you have GNU environment, use
+If you have GNU environment, use:
 
+ autoreconf -i
+ automake
  ./configure
  make
- make install
+ sudo make install
 
-See the file INSTALL for more details how to use configure, or type
+For more details how to use configure, type:
 
  ./configure --help
-
-If you do not have GNU environment, you can use only the command-line version.
-Use makefiles under cmd-version/ directory.
-In UNIX environment, use
-
- make -f Makefile.unix 
-
-In Microsoft Windows, use
-
- nmake -f Makefile.msc
-
-In other environments use other makefiles (probably self-made).
 
 ---
 I hope you like the plug-in and the command-line version. If you have any

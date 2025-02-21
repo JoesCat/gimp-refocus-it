@@ -1,32 +1,55 @@
-2004-06-16  Lukas Kunc  <lukas.kunc@seznam.cz>
+2025-02-20 (2.1)  Joe Da Silva <digital@joescat.com>
 
-	* Second public release - version 2.0.0 for GIMP 2.0
+  * Replaced deprecated INTLTOOL with GETTEXT
+  * Updated configure.ac and Makefile.am from 2.54 to 2.69
+  * Removed xmalloc code - We should avoid doing exit() here.
+  * Simplified a lot of code with expectation of upgrading to GIMP3.
+  * Inline is interesting, but the speed gains in excluding a call
+    and matching return are neglible. Opted for smaller exe instead.
+  * Optional float/double simplified to double since GIMP3 uses double.
+  * Dropped build of cmd-line tools, since GIMP3 will use GTK3.
+  * GIMP2 plugin binary name simplified to refocus-it
+  * po/* locale files renamed to use gimp20-refocus-it
+  * Dropped micro_version value since this is a binary, not a library.
+    Distros can opt to use the micro_version value for their builds.
+  * Realigned all code in src/* directory since some code followed
+    different styles (TABs, spaces, {brackets}. Chose to use a more
+    compact coding style similar to Fontforge 20120731 which allows
+    more code to be viewed per display screen.
+  * Dropped help/ directory, appeared unfinished and preliminary.
+  * Moved doc/*.pgm to img/ directory since these are useful 16bpp.
+  * Imported sourceforge information page into README.md and img/*.jpg
 
-	* cmd-line/: Added command-line version for users not having GIMP
-	Use refocus-it-cmd --help for more information.
+  NOTE: This is still a GIMP2 binary, and builds okay on gimp-2.10
 
-	* po/*: Internationalized
+2004-06-16 (2.0.0) Lukas Kunc  <lukas.kunc@seznam.cz>
 
-2004-06-15  gettextize  <bug-gnu-gettext@gnu.org>
+  * Second public release - version 2.0.0 for GIMP 2.0
+  * cmd-line/: Added command-line version for users not having GIMP
+    Use refocus-it-cmd --help for more information.
+  * po/*: Internationalized
 
-	* Makefile.am (SUBDIRS): New variable.
-	(ACLOCAL_AMFLAGS): New variable.
-	(EXTRA_DIST): Add config.rpath.
-	* configure.in (AC_OUTPUT): Add po/Makefile.in,
+2004-06-15 (prerelease)  gettextize  <bug-gnu-gettext@gnu.org>
+
+  * Makefile.am (SUBDIRS): New variable.
+    (ACLOCAL_AMFLAGS): New variable.
+    (EXTRA_DIST): Add config.rpath.
+  * configure.in (AC_OUTPUT): Add po/Makefile.in,
+
+2003-07-19 (1.0.2) Lukas Kunc  <lukas.kunc@seznam.cz>
+
+  * First public release - version 1.0.2 (on sourceforge).
 
 2003-05-23  Lukas Kunc  <lukas.kunc@seznam.cz>
 
-	* This is the first public release (0.0.1) of the refocus plug-in.
+  * This is the first public release (0.0.1) of the refocus plug-in.
 
 2003-05-28  Lukas Kunc  <lukas.kunc@seznam.cz>
 
-	* Makefile.msc: Makefile for Microsoft Visual C++ added.
-
-	* blur.c: Added support for motion and gaussian blur, improved
-                  support for defocus blur.
-
-	* main.c: Added support for motion and gaussian blur.
-	* main.c: Added support for alpha channel.
-
-	* weights.c: Make code faster for sparse convolution masks.
-	* hopfield.c: Make code faster for sparse convolution masks.
+  * Makefile.msc: Makefile for Microsoft Visual C++ added.
+  * blur.c: Added support for motion and gaussian blur,
+            improved support for defocus blur.
+  * main.c: Added support for motion and gaussian blur.
+  * main.c: Added support for alpha channel.
+  * weights.c: Make code faster for sparse convolution masks.
+  * hopfield.c: Make code faster for sparse convolution masks.
