@@ -20,9 +20,9 @@ INSTALLATION
 
 If you have GNU environment, use:
 
- autoreconf -i
+ autoreconf -i -f
  automake
- ./configure
+ ./configure --prefix=/usr
  make
  sudo make install
 
