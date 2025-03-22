@@ -42,8 +42,6 @@ double convmask_get(convmask_t* convmask, int i, int j);
 void convmask_set_circle(convmask_t* convmask, int i, int j, double value);
 
 #if defined(NDEBUG)
-#include <stdio.h>
-#include <stdlib.h>
 void convmask_print(convmask_t* convmask, FILE* file);
 #endif
 

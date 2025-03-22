@@ -38,9 +38,6 @@ void weights_destroy(weights_t* weights);
 double weights_get(weights_t* weights, int x, int y);
 
 #if defined(NDEBUG)
-#include <stdio.h>
-#include <stdlib.h>
-
 void weights_print(weights_t* weights, FILE* file);
 #endif
 

@@ -20,7 +20,6 @@
 #ifndef _IMAGE_H
 #define _IMAGE_H
 
-#include <stdio.h>
 #include "compiler.h"
 #include "convmask.h"
 #include "boundary.h"
