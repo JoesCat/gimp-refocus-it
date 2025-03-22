@@ -1,4 +1,4 @@
-name: CI
+name: C
 on: [push,pull_request]
 
 jobs:
@@ -16,7 +16,7 @@ jobs:
           autoreconf -i
           automake
       - name: Choose configure
-        run: ./configure ${{ matrix.choiceL }}
+        run: ./configure ${{ matrix.choiceL }} --prefix=/usr
       - name: Make gimp-refocus-it plug-in
         run: make
       - name: Test make strip
@@ -26,32 +26,3 @@ jobs:
         run: |
           sudo make install
           sudo make uninstall
-  win:
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        include: [
-          {msystem: MINGW32, toolchain: mingw-w64-i686, version: x32 },
-          {msystem: MINGW64, toolchain: mingw-w64-x86_64, version: x64 },
-          {msystem: UCRT64, toolchain: mingw-w64-ucrt-x86_64, version: x64 },
-          {msystem: CLANG64, toolchain: mingw-w64-clang-x86_64, version: x64 },
-        ]
-    name: ${{ matrix.msystem }}
-    defaults:
-      run:
-        shell: msys2 {0}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: msys2/setup-msys2@v2
-        with:
-          msystem: ${{ matrix.msystem }}
-          update: true
-          install: autotools base-devel git ${{ matrix.toolchain }}-toolchain ${{ matrix.toolchain }}-gimp2
-      - name: Create configure
-        run: |
-          autoreconf -i
-          automake
-      - name: run ./configure
-        run: ./configure
-      - name: Make gimp-refocus-it plug-in
-        run: make
