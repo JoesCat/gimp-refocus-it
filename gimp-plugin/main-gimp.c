@@ -74,19 +74,19 @@ static void dialog_response(GtkWidget *widget, gint response_id, gpointer data);
 
 static void input_parameters_init (void);
 static void input_parameters_destroy (void);
-static void input_parameters_load();
-static void input_parameters_save();
+static void input_parameters_load (void);
+static void input_parameters_save (void);
 static void input_parameters_fetch_params (const GimpParam *param);
 static void input_parameters_fetch_dlg();
 static int  image_parameters_init (const GimpParam *param, GimpParam *values);
-static void image_parameters_destroy();
+static void image_parameters_destroy (void);
 static int  hopfield_data_init (void);
-static void hopfield_data_destroy();
-static void hopfield_data_load();
-static void hopfield_data_save();
-static void preview_parameters_init();
-static void preview_fetch_hopfield();
-static void preview_update();
+static void hopfield_data_destroy (void);
+static void hopfield_data_load (void);
+static void hopfield_data_save (void);
+static void preview_parameters_init (void);
+static void preview_fetch_hopfield (void);
+static void preview_update (void);
 static void get_lambdas (gfloat* lambda, gfloat* lambda_min);
 static void compute (int iterations);
 static void motion_angle_draw (gboolean complete_redraw);
@@ -128,8 +128,10 @@ typedef struct {
   guint         y;
   guint         width;
   guint         height;
-  guchar       *data;
   guint         size;
+  guchar       *data;
+  gdouble      *linear;
+  const Babl   *rgb8;
 } SPreview;
 
 typedef struct {
@@ -158,6 +160,15 @@ typedef struct {
   gboolean      gray;
   gboolean      rgb;
   GimpDrawable *drawable;
+  GeglBuffer   *srcBuf;
+  GeglBuffer   *destBuf;
+  gdouble      *srcImg;
+  guchar       *destImg;
+  const Babl   *format;
+  const Babl   *linear;
+  gint          xImg;
+  gint          yImg;
+  gint          bppImg;
 } SImageParameters;
 
 typedef struct {
@@ -364,11 +375,11 @@ static void input_parameters_init (void) {
   input_parameters.adaptive_smooth = TRUE;
 }
 
-static void input_parameters_load () {
+static void input_parameters_load (void) {
   gimp_get_data (PACKAGE_NAME, &input_parameters);
 }
 
-static void input_parameters_save () {
+static void input_parameters_save (void) {
   gimp_set_data (PACKAGE_NAME, &input_parameters, sizeof (input_parameters));
 }
 
@@ -496,217 +507,247 @@ static int image_parameters_init (const GimpParam *param, GimpParam *values) {
   image_parameters.sel_height = image_parameters.sel_y2 - image_parameters.sel_y1;
   image_parameters.img_bpp    = gimp_drawable_bpp (image_parameters.drawable->drawable_id);
   image_parameters.size       = image_parameters.sel_width * image_parameters.sel_height;
+
+  preview.data = preview.linear = NULL;
   return 0;
 }
 
-static void image_parameters_destroy () {
+static void image_parameters_destroy (void) {
   gimp_drawable_detach (image_parameters.drawable);
+  if (preview.data)   g_free(preview.data);
+  if (preview.linear) g_free(preview.linear);
 }
 
-static void preview_parameters_init () {
+static void preview_parameters_init (void) {
+  const char *str, *ret;
+
+#if defined(NDEBUG)
+    printf("preview_parameters_init() - starting!\n");
+#endif
+  /* select and RGB version of existing format */
+  str = babl_get_name (image_parameters.format);
+  if (strstr(str, "RaGaBa") || strstr(str, "YaA ") || strstr(str, "Ya "))
+    ret = "RaGaBa u8";
+  else if (strstr(str, "R'G'B'") || strstr(str, "Y'A ") || strstr(str, "Y' "))
+    ret = "R'G'B' u8";
+  else if (strstr(str, "R~G~B~") || strstr(str, "Y~A ") || strstr(str, "Y~ "))
+    ret = "R~G~B~ u8";
+  else if (strstr(str, "R'aG'aB'a") || strstr(str, "Y'aA ") || strstr(str, "Y'a "))
+    ret = "R'aG'aB'a u8";
+  else //if (strstr(str, "RGB") || strstr(str, "YA ") || strstr(str, "Y "))
+    ret = "RGB u8";
+#if defined(NDEBUG)
+    printf("preview_parameters_init() - found <%s> and will output <%s>\n", str, ret);
+#endif
+  //g_free (str);
+
   preview.width  = MIN (image_parameters.sel_width, PREVIEW_SIZE);
   preview.height = MIN (image_parameters.sel_height, PREVIEW_SIZE);
   preview.x = preview.y = 0;
-  preview.data   = g_new (guchar, preview.width * preview.height * 3);
   preview.size   = preview.width * preview.height;
+  preview.rgb8   = babl_format (ret);
+  preview.data   = g_new (guchar,  preview.size * 3);
+  preview.linear = g_new (gdouble, preview.size * (image_parameters.rgb ? 3:1));
 }
 
 static int hopfield_data_init (void) {
-  switch (image_parameters.img_bpp) {
-  case 1:
-  case 2:
-    if (!(image_create (&hopfield.imageR, image_parameters.sel_width, image_parameters.sel_height)))
-      goto hopfield_data_init_err0;
-    break;
-  case 3:
-  case 4:
-    if (!(image_create (&hopfield.imageR, image_parameters.sel_width, image_parameters.sel_height)))
-      goto hopfield_data_init_err0;
+  gint32      drawable_ID;
+  gint        xImg, yImg, pixelCount, bppImg;
+
+  gegl_init (NULL, NULL);
+
+  drawable_ID = image_parameters.drawable->drawable_id;
+  image_parameters.format = gimp_drawable_get_format (drawable_ID);
+  image_parameters.bppImg = bppImg = babl_format_get_bytes_per_pixel (image_parameters.format);
+
+  /* Load 'linear_double RGB' or 'linear_double Gray' into srcImg */
+  image_parameters.xImg = xImg = gimp_drawable_width(drawable_ID);
+  image_parameters.yImg = yImg = gimp_drawable_height(drawable_ID);
+  pixelCount = xImg * yImg;
+  if (!(image_parameters.srcImg = g_new (gdouble, pixelCount * (image_parameters.rgb ? 3:1))))
+    goto hopfield_data_init_err0;
+  if (!(image_parameters.destImg = g_new (guchar, pixelCount * bppImg)))
+    goto hopfield_data_init_err1;
+
+  if (!(image_parameters.srcBuf = gimp_drawable_get_buffer (drawable_ID))) {
+    goto hopfield_data_init_err2;
+  }
+  gegl_buffer_get (image_parameters.srcBuf, GEGL_RECTANGLE(0, 0, xImg, yImg), 1.0, \
+                   image_parameters.format, image_parameters.destImg, \
+                   GEGL_AUTO_ROWSTRIDE, GEGL_ABYSS_NONE);
+  image_parameters.linear = babl_format ((image_parameters.rgb ? "RGB double":"Y double"));
+  babl_process (babl_fish (image_parameters.format, image_parameters.linear), \
+                image_parameters.destImg, image_parameters.srcImg, \
+                pixelCount);
+#if defined(NDEBUG)
+  printf("hopfield_data_init()\nDrawable image format <%s>, bytes per pixel=%d, xImg=%d yImg=%d\n",
+         babl_get_name (image_parameters.format), image_parameters.bppImg, xImg, yImg);
+  for (int i = 0; i <40; i++) {
+    printf("|%d-%d-%f",i,image_parameters.destImg[i],image_parameters.srcImg[i]);
+  }
+  printf("\nBuffer srcImg format <%s>\n", babl_get_name (image_parameters.linear));
+#endif
+  g_object_unref (image_parameters.srcBuf);
+
+  /* init hopfield data */
+  if (!(image_create (&hopfield.imageR, image_parameters.sel_width, image_parameters.sel_height)))
+    goto hopfield_data_init_err3;
+  if (image_parameters.rgb) {
     if (!(image_create (&hopfield.imageG, image_parameters.sel_width, image_parameters.sel_height)))
-      goto hopfield_data_init_err1;
+      goto hopfield_data_init_err4;
     if (!(image_create (&hopfield.imageB, image_parameters.sel_width, image_parameters.sel_height)))
-      goto hopfield_data_init_err2;
-    break;
+      goto hopfield_data_init_err5;
   }
   return 0;
 
-hopfield_data_init_err2:
+/* Out of memory if you are here */
+hopfield_data_init_err5:
   image_destroy (&hopfield.imageG);
-hopfield_data_init_err1:
+hopfield_data_init_err4:
   image_destroy (&hopfield.imageR);
+hopfield_data_init_err3:
+hopfield_data_init_err2:
+  g_free (image_parameters.destImg);
+hopfield_data_init_err1:
+  g_free (image_parameters.srcImg);
 hopfield_data_init_err0:
+  gegl_exit ();
 #if defined(NDEBUG)
   printf("Error, hopfield_data_init() - out of memory!\n");
 #endif
   return -1;
 }
 
-static void hopfield_data_destroy () {
-  switch (image_parameters.img_bpp) {
-  case 4:
-  case 3:
+static void hopfield_data_destroy (void) {
+  if (image_parameters.rgb) {
     image_destroy (&hopfield.imageB);
     image_destroy (&hopfield.imageG);
-  case 2:
-  case 1:
-    image_destroy (&hopfield.imageR);
-    break;
   }
+  image_destroy (&hopfield.imageR);
+
+  g_free (image_parameters.destImg);
+  g_free (image_parameters.srcImg);
 }
 
-static void hopfield_data_save () {
-  GimpPixelRgn src_rgn;
-  GimpPixelRgn dst_rgn;
-  guchar      *image;
-  guint        x, y;
-  guchar      *ptr;
-  guint        addinc;
+static void hopfield_data_save (void) {
+  gint32      drawable_ID;
+  gdouble    *ptr;
+  gint        x, y, xImg, yImg;
 
-  image = g_new (guchar, image_parameters.sel_width * image_parameters.sel_height * image_parameters.img_bpp);
+  drawable_ID = image_parameters.drawable->drawable_id;
+  xImg = image_parameters.xImg;
+  yImg = image_parameters.yImg;
 
-  gimp_pixel_rgn_init (&src_rgn, image_parameters.drawable,
-                       image_parameters.sel_x1, image_parameters.sel_y1,
-                       image_parameters.sel_width, image_parameters.sel_height,
-                       FALSE, FALSE);
-
-  gimp_pixel_rgn_init (&dst_rgn, image_parameters.drawable,
-                       image_parameters.sel_x1, image_parameters.sel_y1,
-                       image_parameters.sel_width, image_parameters.sel_height,
-                       TRUE, TRUE);
-
-  gimp_pixel_rgn_get_rect (&src_rgn, image,
-                           image_parameters.sel_x1, image_parameters.sel_y1,
-                           image_parameters.sel_width, image_parameters.sel_height);
-
-  ptr = image;
-  switch (image_parameters.img_bpp) {
-  case 1:
-  case 2:
-    addinc = image_parameters.img_bpp;
-    for (y = 0; y < image_parameters.sel_height; y++) {
-      for (x = 0; x < image_parameters.sel_width; x++) {
-        *ptr = (guchar)(image_get (&hopfield.imageR, x, y) + 0.5);
-        ptr += addinc;
+  ptr = image_parameters.srcImg;
+  if (image_parameters.rgb) {
+    for (y = 0; y < yImg; y++) {
+      for (x = 0; x < xImg; x++) {
+        *(ptr++) = MIN (image_get (&hopfield.imageR, x, y), 1.0);
+        *(ptr++) = MIN (image_get (&hopfield.imageG, x, y), 1.0);
+        *(ptr++) = MIN (image_get (&hopfield.imageB, x, y), 1.0);
       }
     }
-    break;
-
-  case 4:
-  case 3:
-    addinc = image_parameters.img_bpp - 2;
-    for (y = 0; y < image_parameters.sel_height; y++) {
-      for (x = 0; x < image_parameters.sel_width; x++) {
-        *(ptr++) = (guchar)(image_get (&hopfield.imageR, x, y) + 0.5);
-        *(ptr++) = (guchar)(image_get (&hopfield.imageG, x, y) + 0.5);
-        *ptr = (guchar)(image_get (&hopfield.imageB, x, y) + 0.5);
-        ptr += addinc;
+  } else {
+    for (y = 0; y < yImg; y++) {
+      for (x = 0; x < xImg; x++) {
+        *(ptr++) = MIN (image_get (&hopfield.imageR, x, y), 1.0);
       }
     }
-    break;
   }
 
-  gimp_pixel_rgn_set_rect (&dst_rgn, image,
-                           image_parameters.sel_x1, image_parameters.sel_y1,
-                           image_parameters.sel_width, image_parameters.sel_height);
+  babl_process (babl_fish (image_parameters.linear, image_parameters.format), \
+                image_parameters.srcImg, image_parameters.destImg, \
+                (xImg * yImg));
+#if defined(NDEBUG)
+  printf("hopfield_data_save() - converted srcImg back to drawable format!\n");
+  printf("Drawable image format <%s>, bytes per pixel=%d, xImg=%d yImg=%d\n",
+         babl_get_name (image_parameters.format), image_parameters.bppImg, xImg, yImg);
+  for (int i = 0; i <40; i++) {
+    printf("|%d-%f-%d",i,image_parameters.srcImg[i],image_parameters.destImg[i]);
+  }
+  printf("\nBuffer srcImg format <%s>\n", babl_get_name (image_parameters.linear));
+#endif
+
   /* merge the shadow, update the drawable */
-  gimp_drawable_flush (image_parameters.drawable);
-  gimp_drawable_merge_shadow (image_parameters.drawable->drawable_id, TRUE);
-  gimp_drawable_update (image_parameters.drawable->drawable_id,
-                        image_parameters.sel_x1, image_parameters.sel_y1,
-                        image_parameters.sel_width, image_parameters.sel_height);
-  g_free (image);
+  if (!(image_parameters.destBuf = gimp_drawable_get_shadow_buffer (drawable_ID)))
+    goto hopfield_data_save_err0;
+  gegl_buffer_set (image_parameters.destBuf, GEGL_RECTANGLE(0, 0, xImg, yImg), 0, \
+                   image_parameters.format, image_parameters.destImg, GEGL_AUTO_ROWSTRIDE);
+  g_object_unref (image_parameters.destBuf);
+  gimp_drawable_merge_shadow (drawable_ID, TRUE);
+#if defined(NDEBUG)
+  printf("hopfield_data_save() - shadow merged!\n");
+#endif
+  gimp_drawable_update (drawable_ID, 0, 0, xImg, yImg);
+  return;
+
+hopfield_data_save_err0:
+#if defined(NDEBUG)
+  printf("Error, hopfield_data_save() - out of memory!\n");
+#endif
+  return;
+
 }
 
-static void hopfield_data_load () {
-  GimpPixelRgn src_rgn;
-  guchar      *image;
-  guint        x, y;
-  guchar      *ptr;
-  guint        addinc;
+static void hopfield_data_load (void) {
+  guint    x, y;
+  gdouble *ptr;
 
-  image = g_new (guchar, image_parameters.sel_width * image_parameters.sel_height * image_parameters.img_bpp);
-
-  gimp_pixel_rgn_init (&src_rgn, image_parameters.drawable,
-                       image_parameters.sel_x1, image_parameters.sel_y1,
-                       image_parameters.sel_width, image_parameters.sel_height,
-                       FALSE, FALSE);
-
-  gimp_pixel_rgn_get_rect (&src_rgn, image,
-                           image_parameters.sel_x1, image_parameters.sel_y1,
-                           image_parameters.sel_width, image_parameters.sel_height);
-
-  ptr = image;
-  switch (image_parameters.img_bpp) {
-  case 1:
-  case 2:
-    addinc = image_parameters.img_bpp;
-    for (y = 0; y < image_parameters.sel_height; y++) {
-      for (x = 0; x < image_parameters.sel_width; x++) {
-        image_set (&hopfield.imageR, x, y, *ptr);
-        ptr += addinc;
-      }
-    }
-    break;
-
-  case 3:
-  case 4:
-    addinc = image_parameters.img_bpp - 2;
-    for (y = 0; y < image_parameters.sel_height; y++) {
-      for (x = 0; x < image_parameters.sel_width; x++) {
+  ptr = image_parameters.srcImg;
+  if (image_parameters.rgb) {
+    for (y = 0; y < image_parameters.yImg; y++) {
+      for (x = 0; x < image_parameters.xImg; x++) {
         image_set (&hopfield.imageR, x, y, *ptr);
         ptr++;
         image_set (&hopfield.imageG, x, y, *ptr);
         ptr++;
         image_set (&hopfield.imageB, x, y, *ptr);
-        ptr += addinc;
+        ptr++;
       }
     }
-    break;
+  } else {
+    for (y = 0; y < image_parameters.sel_height; y++) {
+      for (x = 0; x < image_parameters.sel_width; x++) {
+        image_set (&hopfield.imageR, x, y, *ptr);
+        ptr++;
+      }
+    }
   }
-
-  g_free (image);
 }
 
-static void preview_fetch_hopfield () {
-  guint   x, y;
-  guint   w, h;
-  guchar *ptr;
-  guchar  byte;
+static void preview_fetch_hopfield (void) {
+  guint    x, y;
+  guint    w, h;
+  gdouble *ptr;
 
   w = preview.width + preview.x;
   h = preview.height + preview.y;
-  ptr = preview.data;
+  ptr = preview.linear;
 
-  switch (image_parameters.img_bpp) {
-  case 1:
-  case 2:
+  if (image_parameters.rgb) {
     for (y = preview.y; y < h; y++) {
       for (x = preview.x; x < w; x++) {
-        byte = (guchar)(image_get (&hopfield.imageR, x, y) + 0.5);
-        *(ptr++) = byte;
-        *(ptr++) = byte;
-        *(ptr++) = byte;
+        *(ptr++) = image_get (&hopfield.imageR, x, y);
+        *(ptr++) = image_get (&hopfield.imageG, x, y);
+        *(ptr++) = image_get (&hopfield.imageB, x, y);
       }
     }
-    break;
-  case 3:
-  case 4:
+  } else {
     for (y = preview.y; y < h; y++) {
       for (x = preview.x; x < w; x++) {
-        *(ptr++) = (guchar)(image_get (&hopfield.imageR, x, y) + 0.5);
-        *(ptr++) = (guchar)(image_get (&hopfield.imageG, x, y) + 0.5);
-        *(ptr++) = (guchar)(image_get (&hopfield.imageB, x, y) + 0.5);
+        *(ptr++) = image_get (&hopfield.imageR, x, y);
       }
     }
-    break;
   }
+  babl_process (babl_fish (image_parameters.linear, preview.rgb8), \
+                preview.linear, preview.data, preview.size);
 }
 
-static void preview_update () {
+static void preview_update (void) {
   guint   y;
   guchar *image;
 
-  preview_fetch_hopfield();
+  preview_fetch_hopfield ();
 
   for (y = 0, image = preview.data; y < preview.height; y ++, image += preview.width * 3) {
     gtk_preview_draw_row (GTK_PREVIEW (preview.preview), image, 0, y, preview.width);
@@ -1046,7 +1087,7 @@ static GtkWidget* preview_create () {
   return frame;
 }
 
-static gboolean dialog () {
+static gboolean dialog (void) {
   GtkWidget *element;
   GtkWidget *hbox;
   GtkWidget *dlg;
@@ -1166,8 +1207,8 @@ static void compute (int iterations) {
 
   progress_bar_init ();
 
-  hopfield_data_load();
-  preview_update();
+  hopfield_data_load ();
+  preview_update ();
 
   blur_create_defocus (&defoc, (double)input_parameters.radius);
   blur_create_gauss (&gauss, (double)input_parameters.gauss);
@@ -1326,14 +1367,10 @@ run (const gchar *name, gint nparams, const GimpParam *param,
     title = g_strdup_printf (_("Iterative Refocus - %s"), PACKAGE_VERSION);
     gimp_ui_init (title, TRUE);
     input_parameters_load ();
-    if (!dialog ()) {
-      hopfield_data_destroy ();
-      image_parameters_destroy ();
-      input_parameters_destroy ();
-      return;
+    if (dialog ()) {
+      input_parameters_save ();
     }
     gimp_displays_flush ();
-    input_parameters_save ();
     break;
 
   case GIMP_RUN_NONINTERACTIVE:
@@ -1361,6 +1398,8 @@ run (const gchar *name, gint nparams, const GimpParam *param,
   hopfield_data_destroy ();
   image_parameters_destroy ();
   input_parameters_destroy ();
+
+  gegl_exit();
 
   values[0].data.d_status = status;
 }

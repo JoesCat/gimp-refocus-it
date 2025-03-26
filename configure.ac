@@ -80,16 +80,20 @@ AC_SEARCH_LIBS([strerror],[cposix])
 # Search for math.h include and math lib (some OSes have -lm built-in).
 have_libm=maybe
 AC_CHECK_HEADERS([math.h],
-    AC_SEARCH_LIBS([cos],[m],[have_libm=yes]))
+  AC_SEARCH_LIBS([cos],[m],[have_libm=yes],
+    AC_CHECK_FUNC([cos],[have_libm=yes])))
 if test x"${have_libm}" != xyes; then
-    AC_MSG_FAILURE([ERROR: Please install the Math library and math.h],[1])
+  AC_MSG_FAILURE([ERROR: Please install the Math library and math.h],[1])
 fi
 
 dnl DEBUG
-AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug],[Enable debugging @<:@default=no@:>]), , enable_debug=no)
+AC_ARG_ENABLE([debug],
+  [AS_HELP_STRING([--enable-debug],
+  [Enable debugging @<:@default=no@:>])],
+  [],[enable_debug=no])
 
-if test x$enable_debug = xno ; then
-  AC_DEFINE(NDEBUG,, Enable debugging)
+if test x"${enable_debug}" = xyes || test x"${enable_debug}" = xtrue ; then
+  AC_DEFINE([NDEBUG],1,[Enable debugging messages printf to commandline])
 fi
 
 dnl i18n stuff
@@ -100,11 +104,11 @@ AC_SUBST(LOCALEDIR)
 have_gettext=no
 AC_CHECK_HEADERS([intl.h],[have_gettext=yes])
 AC_CHECK_FUNC([gettext],[have_gettext=yes],[have_gettext=no])
-AC_CHECK_HEADERS([locale.h],,[have_gettext=no])
 if test x"${have_gettext}" = xno; then
   AC_SEARCH_LIBS([intl],[have_gettext=yes],[
   AC_MSG_ERROR([ERROR: gettext() required! Please install libintl or GETTEXT Packages.])])
 fi
+AC_CHECK_HEADERS([locale.h],,[have_gettext=no])
 AC_CHECK_FUNC([bind_textdomain_codeset],,[have_gettext=no])
 AC_CHECK_FUNC([textdomain],,[have_gettext=no])
 if test x"${have_gettext}" = xno; then
@@ -130,8 +134,14 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS(sqrt)
 
 dnl Gimp-plugin
-PKG_CHECK_MODULES(GIMP, gimp-2.0 gimpui-2.0)
-
+# Check for libgimp/gimp.h include file and libgimp library.
+GIMP_CFLAGS=
+GIMP_LIBS=
+have_libgimp=no
+PKG_CHECK_MODULES([GIMP],[gimp-2.0 >= 2.10.0 gimpui-2.0 >= 2.10.0],[have_libgimp=yes])
+if test x"${have_libgimp}" != xyes; then
+    AC_MSG_FAILURE([ERROR: Please install the developer version of libgimp2.],[1])
+fi
 AC_SUBST(GIMP_CFLAGS)
 AC_SUBST(GIMP_LIBS)
 
@@ -146,20 +156,20 @@ GIMP_BINDIR=\${exec_prefix}"$GIMP_RELATIVE"
 AC_SUBST(GIMP_BINDIR)
 
 DATADIR='${datadir}/${PLUGIN_NAME}'
-
 AC_SUBST(DATADIR)
 
-AC_MSG_CHECKING([if GTK+ is version 2.3.0 or newer])
-if $PKG_CONFIG --atleast-version=2.3.0 gtk+-2.0; then
-  have_gtk_2_3=yes
-else
-  have_gtk_2_3=no
+GTK_CFLAGS=
+GTK_LIBS=
+have_libgtk=no
+PKG_CHECK_MODULES([GTK],[gtk+-2.0],[have_libgtk=yes])
+if test x"${have_libgtk}" != xyes; then
+    AC_MSG_FAILURE([ERROR: Please install the developer version of libgtk+2.],[1])
 fi
-AC_MSG_RESULT($have_gtk_2_3)
+AC_SUBST(GTK_CFLAGS)
+AC_SUBST(GTK_LIBS)
 
-if test "x$have_gtk_2_3" != "xyes"; then
-  CPPFLAGS="$CPPFLAGS -DG_DISABLE_DEPRECATED -DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED"
-fi
+CPPFLAGS="${CPPFLAGS} AS_ESCAPE([-I${top_builddir}]) AS_ESCAPE([-I${top_srcdir}])"
+AC_SUBST([CPPFLAGS],["${CPPFLAGS}"])
 
 #--------------------------------------------------------------------------
 # Pass variables to MAKEFILE.AM
