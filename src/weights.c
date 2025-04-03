@@ -1,20 +1,18 @@
 /*
  * Written 2003 Lukas Kunc <Lukas.Kunc@seznam.cz>
  *
- * This program is free software; you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "weights.h"
@@ -35,9 +33,13 @@ weights_t* weights_create(weights_t* weights, convmask_t* convmask) {
   weights->r2 = r2 = 2 * r;
   weights->size = size = 2*r2 + 1;
   weights->stride = r2 * (size + 1);
-  if (!(weights->w = (double*)malloc(sizeof(double) * size * size)))
-    return NULL; /* memory full */
- 
+  if (!(weights->w = (double*)malloc(sizeof(double) * size * size))) {
+#if defined(NDEBUG)
+    printf("Error, weights_create() - Out of memory!\n");
+#endif
+    return NULL;
+  }
+
   for (i = 0; i <= r2; i++) {
     for (j = 0; j <= r2; j++) {
       s = 0.0;
@@ -83,15 +85,15 @@ double weights_get(weights_t* weights, int x, int y) {
 }
 
 #if defined(NDEBUG)
-void weights_print(weights_t* weights, FILE* file) {
+void weights_print(weights_t* weights, char* str) {
   int i, j;
 
-  fprintf(file, "WEIGHTS: (rxnz, rynz)=(%d,%d)\n", weights->rxnz, weights->rynz);
+  printf("WEIGHTS=%s: (rxnz, rynz)=(%d,%d)\n", str, weights->rxnz, weights->rynz);
   for (j = -weights->r2; j <= weights->r2; j++) {
     for (i = -weights->r2; i <= weights->r2; i++) {
-      fprintf(file, " %3.3e", (float)weights_get(weights, i, j));
+      printf(" %3.3g", weights_get(weights, i, j));
     }
-    fprintf(file, "\n");
+    printf("\n");
   }
 }
 #endif

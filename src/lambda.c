@@ -1,20 +1,18 @@
 /*
  * Written 2003 Lukas Kunc <Lukas.Kunc@seznam.cz>
  *
- * This program is free software; you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "lambda.h"
@@ -46,11 +44,8 @@ static void get_variance_mirror(image_t* variance, image_t* img, double* pmin, d
       sum *= sum;
       var = sum2 - sum;
       image_set(variance, i, j, var);
-      if (var > maxvar) {
-        maxvar = var;
-      } else if (var < minvar) {
-        minvar = var;
-      }
+      if (var > maxvar) maxvar = var;
+      if (var < minvar) minvar = var;
     }
   }
   *pmax = maxvar;
@@ -84,12 +79,8 @@ static void get_variance_period(image_t* variance, image_t* img, double* pmin, d
       sum *= sum;
       var = sum2 - sum;
       image_set(variance, i, j, var);
-      if (var > maxvar) {
-        maxvar = var;
-      }
-      else if (var < minvar) {
-        minvar = var;
-      }
+      if (var > maxvar) maxvar = var;
+      if (var < minvar) minvar = var;
     }
   }
   *pmax = maxvar;
@@ -104,7 +95,9 @@ lambda_t* lambda_create(lambda_t* lambda, int x, int y, double minlambda, int wi
   lambda->filter = filter;
   if ((lambda->lambda = (double*)malloc(sizeof(double) * x * y)))
     return lambda;
-  /* out of memory, return NULL */
+#if defined(NDEBUG)
+    printf("Error, lambda_create() - Out of memory!\n");
+#endif
   return NULL;
 }
 
@@ -151,7 +144,7 @@ static lambda_t* lambda_calculate_period(lambda_t* lambda, image_t* image) {
 
   size = lambda->x * lambda->y;
   for (i = 0; i < size; i++) {
-    lambda->lambda[i] = akoef + bkoef*variance.data[i];
+    lambda->lambda[i] = akoef + bkoef * variance.data[i];
   }
 
   if (lambda->filter) {
@@ -188,11 +181,11 @@ static lambda_t* lambda_calculate_period_nl(lambda_t* lambda, image_t* image) {
 
   get_variance_period(&variance, imgcal, &minvar, &maxvar, lambda->winsize);
 
-  alpha = (1.0-lambda->minlambda)/(lambda->minlambda*(maxvar-minvar));
+  alpha = (1.0 - lambda->minlambda)/(lambda->minlambda * (maxvar - minvar));
 
   size = lambda->x * lambda->y;
   for (i = 0; i < size; i++) {
-    lambda->lambda[i] = 1.0/(1.0+alpha*(variance.data[i]-minvar));
+    lambda->lambda[i] = 1.0/(1.0 + alpha * (variance.data[i] - minvar));
   }
 
   if (lambda->filter) {
@@ -213,7 +206,7 @@ static lambda_t* lambda_calculate_mirror(lambda_t* lambda, image_t* image) {
   if (lambda->filter) {
     if (!(imgcal = image_create_copyparam(&imgenh, image)))
       return NULL;
-    if (!(image_convolve_period(imgcal, image, lambda->filter))) {
+    if (!(image_convolve_mirror(imgcal, image, lambda->filter))) {
       image_destroy(imgcal);
       return NULL;
     }
@@ -234,7 +227,7 @@ static lambda_t* lambda_calculate_mirror(lambda_t* lambda, image_t* image) {
 
   size = lambda->x * lambda->y;
   for (i = 0; i < size; i++) {
-    lambda->lambda[i] = akoef + bkoef*variance.data[i];
+    lambda->lambda[i] = akoef + bkoef * variance.data[i];
   }
 
   if (lambda->filter) {
@@ -255,7 +248,7 @@ static lambda_t* lambda_calculate_mirror_nl(lambda_t* lambda, image_t* image) {
   if (lambda->filter) {
     if (!(imgcal = image_create_copyparam(&imgenh, image)))
       return NULL;
-    if (!(image_convolve_period(imgcal, image, lambda->filter))) {
+    if (!(image_convolve_mirror(imgcal, image, lambda->filter))) {
       image_destroy(imgcal);
       return NULL;
     }
@@ -271,11 +264,11 @@ static lambda_t* lambda_calculate_mirror_nl(lambda_t* lambda, image_t* image) {
 
   get_variance_mirror(&variance, imgcal, &minvar, &maxvar, lambda->winsize);
 
-  alpha = (1.0-lambda->minlambda)/(lambda->minlambda*(maxvar-minvar));
+  alpha = (1.0 - lambda->minlambda)/(lambda->minlambda*(maxvar - minvar));
 
   size = lambda->x * lambda->y;
   for (i = 0; i < size; i++) {
-    lambda->lambda[i] = 1.0/(1.0+alpha*(variance.data[i]-minvar));
+    lambda->lambda[i] = 1.0/(1.0 + alpha * (variance.data[i] - minvar));
   }
 
   if (lambda->filter) {

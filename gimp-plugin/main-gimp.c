@@ -87,8 +87,8 @@ static void hopfield_data_save (void);
 static void preview_parameters_init (void);
 static void preview_fetch_hopfield (void);
 static void preview_update (void);
-static void get_lambdas (gfloat* lambda, gfloat* lambda_min);
-static void compute (int iterations);
+static void get_lambdas (gdouble* lambda, gdouble* lambda_min);
+static int compute (int iterations);
 static void motion_angle_draw (gboolean complete_redraw);
 static void motion_angle_xy_calculate (gfloat x, gfloat y);
 
@@ -282,8 +282,8 @@ static void destroy_callback (GtkWidget *widget, gpointer data) {
 static void ok_callback (GtkWidget *widget, gpointer data) {
   gtk_widget_set_sensitive (dialog_elements.dialog, FALSE);
   input_parameters_fetch_dlg ();
-  compute (input_parameters.iterations);
-  hopfield_data_save ();
+  if (compute (input_parameters.iterations))
+    hopfield_data_save ();
   gtk_widget_set_sensitive (dialog_elements.dialog, TRUE);
   gtk_widget_destroy (dialog_elements.dialog);
   dialog_parameters.frun = TRUE;
@@ -1141,10 +1141,9 @@ static gboolean dialog (void) {
   return dialog_parameters.frun;
 }
 
-static void get_lambdas (gfloat* lambda, gfloat* lambda_min) {
-  *lambda_min = (gfloat)(1.0 / exp (input_parameters.lambda_min / 4.0));
-  *lambda = (gfloat)input_parameters.lambda / (gfloat)LAMBDA_MAX;
-  *lambda *= (gfloat)0.001 / *lambda_min;
+static void get_lambdas (gdouble* lambda, gdouble* lambda_min) {
+  *lambda_min = 1.0 / exp (input_parameters.lambda_min / 4.0);
+  *lambda = input_parameters.lambda / LAMBDA_MAX * 0.001 / *lambda_min;
 }
 
 static void event_loop () {
@@ -1177,18 +1176,17 @@ static void progress_bar_reset () {
   }
 }
 
-static void compute (int iterations) {
+static int compute (int iterations) {
   int i;
-  gfloat lambda_min, lambda;
+  gdouble lambda_min, lambda;
   gfloat step, final;
-  gboolean is_rgb, is_adaptive, is_smooth, is_mirror;
+  gboolean is_adaptive, is_smooth, is_mirror;
   convmask_t defoc, gauss, motion, blur;
 
   event_loop ();
 
   get_lambdas (&lambda, &lambda_min);
 
-  is_rgb = image_parameters.img_bpp >= 3;
   is_smooth = (lambda > 1e-8 && lambda_min < LAMBDAMIN_USABLE_MAX);
   is_adaptive = (input_parameters.adaptive_smooth && is_smooth);
   is_mirror = (input_parameters.boundary == BOUNDARY_MIRROR);
@@ -1201,7 +1199,7 @@ static void compute (int iterations) {
   } else if (is_smooth) {
     final++;
   }
-  if (is_rgb) {
+  if (image_parameters.rgb) {
     final *= 3.0;
   }
 
@@ -1210,77 +1208,131 @@ static void compute (int iterations) {
   hopfield_data_load ();
   preview_update ();
 
-  blur_create_defocus (&defoc, (double)input_parameters.radius);
-  blur_create_gauss (&gauss, (double)input_parameters.gauss);
-  blur_create_motion (&motion, (double)input_parameters.motion, (double)input_parameters.mot_angle);
-  convmask_convolve (&blur, &defoc, &gauss);
-  convmask_convolve (&hopfield.blur, &blur, &motion);
+  if (blur_create_defocus (&defoc, (double)input_parameters.radius) == NULL) goto compute_err0;
+  if (blur_create_gauss (&gauss, (double)input_parameters.gauss) == NULL) goto compute_err1;
+  if (blur_create_motion (&motion, (double)input_parameters.motion, (double)input_parameters.mot_angle) == NULL) goto compute_err2;
+  if (convmask_convolve (&blur, &defoc, &gauss) == NULL)  goto compute_err3;
+  if (convmask_convolve (&hopfield.blur, &blur, &motion) == NULL) goto compute_err4;
+  convmask_destroy (&blur);
+  convmask_destroy (&motion);
   convmask_destroy (&gauss);
   convmask_destroy (&defoc);
-  convmask_destroy (&motion);
+#if defined(NDEBUG)
+  int x, y, r;
+  printf("combine blur+motion+guass+defocus using convmask_convolve()");
+  convmask_print(&hopfield.blur, "hopfield.blur");
+#endif
 
   if (is_smooth) {
-    blur_create_gauss (&hopfield.filter, 1.0);
+    if (blur_create_gauss (&hopfield.filter, 1.0) == NULL) goto compute_err5;
     lambda_set_mirror (&hopfield.lambdafldR, is_mirror);
     lambda_set_nl (&hopfield.lambdafldR, TRUE);
-    lambda_create (&hopfield.lambdafldR, image_parameters.sel_width, image_parameters.sel_height, lambda_min, input_parameters.winsize, &hopfield.filter); //memfull?
-    if (is_rgb) {
+    if (lambda_create (&hopfield.lambdafldR, image_parameters.sel_width, image_parameters.sel_height, lambda_min, input_parameters.winsize, &hopfield.filter) == NULL) goto compute_err6;
+#if defined(NDEBUG)
+    x = image_parameters.sel_width;
+    y = image_parameters.sel_height;
+    r = hopfield.filter.radius;
+    printf("is_smooth, lambda_create(), x=%d y=%d lambda_min=%g x=%d y=%d winsize=%d combined radius=%d\n", x, y, lambda_min, hopfield.lambdafldR.x, hopfield.lambdafldR.y, input_parameters.winsize, r);
+    printf("hopfield.lambdafldR, hopfield.imageR\n");
+    for (y = 0; y <= 8; y++) {
+      for (x = 0; x <= 8; x++) {
+        printf("|%d %d %f",x,y, hopfield.lambdafldR.lambda[hopfield.lambdafldR.x * y + x]);
+      }
+      printf("\n");
+    }
+    convmask_print(&hopfield.filter, "hopfield.filter");
+#endif
+    if (image_parameters.rgb) {
       lambda_set_mirror (&hopfield.lambdafldG, is_mirror);
       lambda_set_mirror (&hopfield.lambdafldB, is_mirror);
       lambda_set_nl (&hopfield.lambdafldG, TRUE);
       lambda_set_nl (&hopfield.lambdafldB, TRUE);
-      lambda_create (&hopfield.lambdafldG, image_parameters.sel_width, image_parameters.sel_height, lambda_min, input_parameters.winsize, &hopfield.filter); //memfull?
-      lambda_create (&hopfield.lambdafldB, image_parameters.sel_width, image_parameters.sel_height, lambda_min, input_parameters.winsize, &hopfield.filter); //memfull?
+      if (lambda_create (&hopfield.lambdafldG, image_parameters.sel_width, image_parameters.sel_height, lambda_min, input_parameters.winsize, &hopfield.filter) == NULL) goto compute_err7;
+      if (lambda_create (&hopfield.lambdafldB, image_parameters.sel_width, image_parameters.sel_height, lambda_min, input_parameters.winsize, &hopfield.filter) == NULL) goto compute_err8;
     }
-  }
+#if defined(NDEBUG)
+    printf("..did smooth (before !is_adaptive)\n");
+#endif
 
-  if (is_smooth && !is_adaptive) {
-    lambda_calculate (&hopfield.lambdafldR, &hopfield.imageR);
-    progress_bar_update(step++ / final);
-    if (is_rgb) {
-      lambda_calculate (&hopfield.lambdafldG, &hopfield.imageG);
-      progress_bar_update (step++ / final);
-
-      lambda_calculate (&hopfield.lambdafldB, &hopfield.imageB);
-      progress_bar_update (step++ / final);
+    if (!is_adaptive) {
+      if (lambda_calculate (&hopfield.lambdafldR, &hopfield.imageR) == NULL) goto compute_err9;
+      progress_bar_update(step++ / final);
+#if defined(NDEBUG)
+    x = hopfield.lambdafldR.x;
+    y = hopfield.lambdafldR.y;
+    printf("!is_adaptive, lambda_calculate(), x=%d y=%d, hopfield.lambdafldR.lambda[] hopfield.imageR[]\n", x, y);
+    for (y = 0; y <= 8; y++) {
+      for (x = 0; x <= 8; x++) {
+        printf("|%d %d %f %f",x,y, hopfield.lambdafldR.lambda[hopfield.lambdafldR.x * y + x], image_get(&hopfield.imageR,x,y) );
+      }
+      printf("\n");
+    }
+#endif
+      if (image_parameters.rgb) {
+        if (lambda_calculate (&hopfield.lambdafldG, &hopfield.imageG) == NULL) goto compute_err9;
+        progress_bar_update (step++ / final);
+        if (lambda_calculate (&hopfield.lambdafldB, &hopfield.imageB) == NULL) goto compute_err9;
+        progress_bar_update (step++ / final);
+      }
+#if defined(NDEBUG)
+      printf("..did !is_adaptive, lambda=%g\n", lambda);
+#endif
     }
   }
 
   hopfield.hopfieldR.lambda = lambda;
   hopfield_set_mirror (&hopfield.hopfieldR, is_mirror);
   if (is_smooth) {
-    hopfield_create (&hopfield.hopfieldR, &hopfield.blur, &hopfield.imageR, &hopfield.lambdafldR);
+    if (hopfield_create (&hopfield.hopfieldR, &hopfield.blur, &hopfield.imageR, &hopfield.lambdafldR) == NULL) goto compute_err9;
   } else {
-    hopfield_create (&hopfield.hopfieldR, &hopfield.blur, &hopfield.imageR, NULL);
+    if (hopfield_create (&hopfield.hopfieldR, &hopfield.blur, &hopfield.imageR, NULL) == NULL) goto compute_err9;
   }
-  if (is_rgb) {
+#if defined(NDEBUG)
+  x = hopfield.lambdafldR.x;
+  y = hopfield.lambdafldR.y;
+  printf("is_smooth, hopfield_create(), x=%d y=%d\n", x, y);
+  printf("hopfield.lambdafldR.lamba[], hopfield.imageR[]\n");
+  for (y = 0; y <= 8; y++) {
+    for (x = 0; x <= 8; x++) {
+      printf("|%d %d %f %f",x,y, hopfield.lambdafldR.lambda[hopfield.lambdafldR.x * y + x], image_get(&hopfield.imageR,x,y) );
+    }
+    printf("\n");
+  }
+  printf("weights=");
+  weights_print(&hopfield.hopfieldR.weights, "hopfield.blur");
+  convmask_print(&hopfield.blur, "hopfield.blur");
+#endif
+  if (image_parameters.rgb) {
     hopfield.hopfieldG.lambda = lambda;
     hopfield.hopfieldB.lambda = lambda;
     hopfield_set_mirror (&hopfield.hopfieldG, is_mirror);
     hopfield_set_mirror (&hopfield.hopfieldB, is_mirror);
     if (is_smooth) {
-      hopfield_create (&hopfield.hopfieldG, &hopfield.blur, &hopfield.imageG, &hopfield.lambdafldG);
-      hopfield_create (&hopfield.hopfieldB, &hopfield.blur, &hopfield.imageB, &hopfield.lambdafldB);
+      if (hopfield_create (&hopfield.hopfieldG, &hopfield.blur, &hopfield.imageG, &hopfield.lambdafldG) == NULL) goto compute_err10;
+      if (hopfield_create (&hopfield.hopfieldB, &hopfield.blur, &hopfield.imageB, &hopfield.lambdafldB) == NULL) goto compute_err11;
     } else {
-      hopfield_create (&hopfield.hopfieldG, &hopfield.blur, &hopfield.imageG, NULL);
-      hopfield_create (&hopfield.hopfieldB, &hopfield.blur, &hopfield.imageB, NULL);
+      if (hopfield_create (&hopfield.hopfieldG, &hopfield.blur, &hopfield.imageG, NULL) == NULL) goto compute_err10;
+      if (hopfield_create (&hopfield.hopfieldB, &hopfield.blur, &hopfield.imageB, NULL) == NULL) goto compute_err11;
     }
   }
+#if defined(NDEBUG)
+  printf("..did lambda = %g, now do iterations=%d\n", lambda, iterations);
+#endif
 
   for (i = 1; i <= iterations; i++) {
     if (is_adaptive) {
-      lambda_calculate (&hopfield.lambdafldR, &hopfield.imageR);
+      if (lambda_calculate (&hopfield.lambdafldR, &hopfield.imageR) == NULL) goto compute_err12;
 
       progress_bar_update (step++ / final);
       if (dialog_parameters.finish) break;
 
-      if (is_rgb) {
-        lambda_calculate (&hopfield.lambdafldG, &hopfield.imageG);
+      if (image_parameters.rgb) {
+        if (lambda_calculate (&hopfield.lambdafldG, &hopfield.imageG) == NULL) goto compute_err12;
 
         progress_bar_update (step++ / final);
         if (dialog_parameters.finish) break;
 
-        lambda_calculate (&hopfield.lambdafldB, &hopfield.imageB);
+        if (lambda_calculate (&hopfield.lambdafldB, &hopfield.imageB) == NULL) goto compute_err12;
 
         progress_bar_update (step++ / final);
         if (dialog_parameters.finish) break;
@@ -1291,7 +1343,7 @@ static void compute (int iterations) {
     progress_bar_update (step++ / final);
     if (dialog_parameters.finish) break;
 
-    if (is_rgb) {
+    if (image_parameters.rgb) {
       hopfield_iteration (&hopfield.hopfieldG);
 
       progress_bar_update (step++ / final);
@@ -1309,24 +1361,56 @@ static void compute (int iterations) {
     if (dialog_parameters.finish) break;
   }
 
-  convmask_destroy(&hopfield.blur);
-  if (is_smooth) {
-    convmask_destroy (&hopfield.filter);
-    lambda_destroy (&hopfield.lambdafldR);
+  if (image_parameters.rgb) {
+    hopfield_destroy (&hopfield.hopfieldB);
+    hopfield_destroy (&hopfield.hopfieldG);
   }
   hopfield_destroy (&hopfield.hopfieldR);
-  if (is_rgb) {
-    if (is_smooth) {
-      lambda_destroy (&hopfield.lambdafldG);
+  if (is_smooth) {
+    if (image_parameters.rgb) {
       lambda_destroy (&hopfield.lambdafldB);
+      lambda_destroy (&hopfield.lambdafldG);
     }
-    hopfield_destroy (&hopfield.hopfieldG);
-    hopfield_destroy (&hopfield.hopfieldB);
+    lambda_destroy (&hopfield.lambdafldR);
+    convmask_destroy (&hopfield.filter);
   }
+  convmask_destroy(&hopfield.blur);
 
   if (!dialog_parameters.finish) {
     progress_bar_reset ();
   }
+  return 1;
+
+compute_err12:
+  if (!image_parameters.rgb) goto compute_err10;
+  hopfield_destroy (&hopfield.hopfieldB);
+compute_err11:
+  hopfield_destroy (&hopfield.hopfieldG);
+compute_err10:
+  hopfield_destroy (&hopfield.hopfieldR);
+compute_err9:
+  if (!image_parameters.rgb) goto compute_err7;
+  if (&hopfield.lambdafldB) lambda_destroy (&hopfield.lambdafldB);
+compute_err8:
+  if (&hopfield.lambdafldG) lambda_destroy (&hopfield.lambdafldG);
+compute_err7:
+  if (&hopfield.lambdafldR) lambda_destroy (&hopfield.lambdafldR);
+compute_err6:
+    convmask_destroy (&hopfield.filter);
+compute_err5:
+  convmask_destroy (&hopfield.blur);
+  return 0;
+
+compute_err4:
+  convmask_destroy (&blur);
+compute_err3:
+  convmask_destroy (&motion);
+compute_err2:
+  convmask_destroy (&gauss);
+compute_err1:
+  convmask_destroy (&defoc);
+compute_err0:
+  return 0;
 }
 
 static void
