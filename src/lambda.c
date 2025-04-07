@@ -50,6 +50,16 @@ static void get_variance_mirror(image_t* variance, image_t* img, double* pmin, d
   }
   *pmax = maxvar;
   *pmin = minvar;
+
+#if defined(NDEBUG)
+  printf("variance %d %d\n", variance->x, variance->y);
+  for (i = 0; i < 5; i++) {
+    for (j = 0; j < 5; j++) {
+      printf("[%d %d %g", i, j, image_get (variance, i, j));
+    }
+    printf("\n");
+  }
+#endif
 }
 
 static void get_variance_period(image_t* variance, image_t* img, double* pmin, double* pmax, int winsize) {
@@ -85,6 +95,16 @@ static void get_variance_period(image_t* variance, image_t* img, double* pmin, d
   }
   *pmax = maxvar;
   *pmin = minvar;
+
+#if defined(NDEBUG)
+  printf("variance %d %d\n", variance->x, variance->y);
+  for (i = 0; i < 5; i++) {
+    for (j = 0; j < 5; j++) {
+      printf("[%d %d %g", i, j, image_get (variance, i, j));
+    }
+    printf("\n");
+  }
+#endif
 }
 
 lambda_t* lambda_create(lambda_t* lambda, int x, int y, double minlambda, int winsize, convmask_t* filter) {
@@ -93,7 +113,7 @@ lambda_t* lambda_create(lambda_t* lambda, int x, int y, double minlambda, int wi
   lambda->minlambda = minlambda;
   lambda->winsize = winsize;
   lambda->filter = filter;
-  if ((lambda->lambda = (double*)malloc(sizeof(double) * x * y)))
+  if ((lambda->lambda = (double*)calloc(x * y, sizeof(double))))
     return lambda;
 #if defined(NDEBUG)
     printf("Error, lambda_create() - Out of memory!\n");
@@ -139,13 +159,18 @@ static lambda_t* lambda_calculate_period(lambda_t* lambda, image_t* image) {
 
   get_variance_period(&variance, imgcal, &minvar, &maxvar, lambda->winsize);
 
-  bkoef = (1.0 - lambda->minlambda)/(minvar - maxvar);
-  akoef = 1.0 - (minvar*(1.0 - lambda->minlambda))/(minvar - maxvar);
+  bkoef = (1.0 - lambda->minlambda)/(maxvar - minvar);
+  akoef = 1.0 - (minvar*(1.0 - lambda->minlambda))/(maxvar - minvar);
 
   size = lambda->x * lambda->y;
   for (i = 0; i < size; i++) {
     lambda->lambda[i] = akoef + bkoef * variance.data[i];
   }
+
+#if defined(NDEBUG)
+  printf("lambda_calculate_period(), minvar=%g maxvar=%g bkoef=%g akoef=%g size=%d\n",
+         minvar, maxvar, bkoef, akoef, size);
+#endif
 
   if (lambda->filter) {
     image_destroy(imgcal);
@@ -188,6 +213,11 @@ static lambda_t* lambda_calculate_period_nl(lambda_t* lambda, image_t* image) {
     lambda->lambda[i] = 1.0/(1.0 + alpha * (variance.data[i] - minvar));
   }
 
+#if defined(NDEBUG)
+  printf("lambda_calculate_period_nl(), minvar=%g maxvar=%g alpha=%g size=%d\n",
+         minvar, maxvar, alpha, size);
+#endif
+
   if (lambda->filter) {
     image_destroy(imgcal);
   }
@@ -222,13 +252,18 @@ static lambda_t* lambda_calculate_mirror(lambda_t* lambda, image_t* image) {
 
   get_variance_mirror(&variance, imgcal, &minvar, &maxvar, lambda->winsize);
 
-  bkoef = (1.0 - lambda->minlambda)/(minvar - maxvar);
-  akoef = 1.0 - (minvar*(1.0 - lambda->minlambda))/(minvar - maxvar);
+  bkoef = (1.0 - lambda->minlambda)/(maxvar - minvar);
+  akoef = 1.0 - (minvar*(1.0 - lambda->minlambda))/(maxvar - minvar);
 
   size = lambda->x * lambda->y;
   for (i = 0; i < size; i++) {
     lambda->lambda[i] = akoef + bkoef * variance.data[i];
   }
+
+#if defined(NDEBUG)
+  printf("lambda_calculate_mirror(), minvar=%g maxvar=%g bkoef=%g akoef=%g size=%d\n",
+         minvar, maxvar, bkoef, akoef, size);
+#endif
 
   if (lambda->filter) {
     image_destroy(imgcal);
@@ -270,6 +305,11 @@ static lambda_t* lambda_calculate_mirror_nl(lambda_t* lambda, image_t* image) {
   for (i = 0; i < size; i++) {
     lambda->lambda[i] = 1.0/(1.0 + alpha * (variance.data[i] - minvar));
   }
+
+#if defined(NDEBUG)
+  printf("lambda_calculate_mirror_nl(), minvar=%g maxvar=%g alpha=%g size=%d\n",
+         minvar, maxvar, alpha, size);
+#endif
 
   if (lambda->filter) {
     image_destroy(imgcal);

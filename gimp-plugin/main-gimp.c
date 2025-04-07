@@ -1232,7 +1232,7 @@ static int compute (int iterations) {
     x = image_parameters.sel_width;
     y = image_parameters.sel_height;
     r = hopfield.filter.radius;
-    printf("is_smooth, lambda_create(), x=%d y=%d lambda_min=%g x=%d y=%d winsize=%d combined radius=%d\n", x, y, lambda_min, hopfield.lambdafldR.x, hopfield.lambdafldR.y, input_parameters.winsize, r);
+    printf("new, is_smooth, lambda_create(), x=%d y=%d lambda=%g lambda_min=%g x=%d y=%d winsize=%d combined radius=%d\n", x, y, lambda, lambda_min, hopfield.lambdafldR.x, hopfield.lambdafldR.y, input_parameters.winsize, r);
     printf("hopfield.lambdafldR, hopfield.imageR\n");
     for (y = 0; y <= 8; y++) {
       for (x = 0; x <= 8; x++) {
@@ -1316,6 +1316,9 @@ static int compute (int iterations) {
     }
   }
 #if defined(NDEBUG)
+  /* if image uses 0..255 or 0.0..1.0, weights,blur,lamba */
+  /* come out to be equal value, others differ by ~16025. */
+  printf("{weights,blur,lambda}=same,imageR=0..255vs0..1\n");
   printf("..did lambda = %g, now do iterations=%d\n", lambda, iterations);
 #endif
 
@@ -1339,6 +1342,22 @@ static int compute (int iterations) {
       }
     }
     hopfield_iteration (&hopfield.hopfieldR);
+
+#if defined(_NDEBUG)
+  x = hopfield.lambdafldR.x;
+  y = hopfield.lambdafldR.y;
+  printf("iteration=%d, hopfield_iteration(), x=%d y=%d\n", i, x, y);
+  printf("hopfield.lambdafldR.lamba[], hopfield.imageR[]\n");
+  for (y = 0; y <= 8; y++) {
+    for (x = 0; x <= 8; x++) {
+      printf("|%d %d %f %f",x,y, hopfield.lambdafldR.lambda[hopfield.lambdafldR.x * y + x], image_get(&hopfield.imageR,x,y) );
+    }
+    printf("\n");
+  }
+  printf("weights=");
+  weights_print(&hopfield.hopfieldR.weights, "hopfield.blur");
+  convmask_print(&hopfield.blur, "hopfield.blur");
+#endif
 
     progress_bar_update (step++ / final);
     if (dialog_parameters.finish) break;

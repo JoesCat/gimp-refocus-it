@@ -34,6 +34,7 @@ static double hopfield_iteration_period(hopfield_t* hopfield) {
   int i,j;
   double s;
   int k;
+  int value8;
   double dE;
   double Sum;
   double ddui;
@@ -74,28 +75,32 @@ static double hopfield_iteration_period(hopfield_t* hopfield) {
                    image_get_period(hopfield->image, i  , j-1));
 
       s -= hopfield->lambda*z;
-
       s += threshold_get(&(hopfield->threshold), i, j);
+      s *= 255.0; /* adjust image from 0.0..1.0 to 0.0..255.0 */
 
       ddui = hardlim(s);
       dE = -2.0 * s * ddui - pom;
       if (dE < 0.0) {
         value = image_get(hopfield->image, i, j);
-        dk = ddui - (s/pom);
-        if (dk > 0.5/2147483647.0 && value < 2147483646.5/2147483647.0) {
-          k = (int)(2147483647.0 * min(dk, 1.0 - value) + 0.5/2147483647.0);
-          dk = (1.0/2147483647.0 * (double)(rand()%k));
-          value += dk;
+        value8 = (int)(255.0 * value + 0.5);
+        k = (s >= 0.0 ? 1 :-1);
+        k -= (int)(s/pom);
+        if (k > 0 && value8 < 255) {
+          k = min(k, 255 - value8);
+          k = (rand()%k) + 1;
+          value8 += k;
+          dk = k;
           dE = (-2.0*s - pom*dk)*dk;
           Sum += dE;
-          image_set(hopfield->image, i, j, value);
-        } else if (dk < -0.5/2147483647.0 && value > 0.5/2147483647.0) {
-          k = (int)(2147483647.0 * min(-dk, value) + 0.5/2147483647.0);
-          dk = -(1.0/2147483647.0 * (double)(rand()%k));
-          value += dk;
+          image_set(hopfield->image, i, j, (value8/255.0));
+        } else if (k < 0 && value8 > 0) {
+          k = min(-k, value8);
+          k = (rand()%k) + 1;
+          value8 -= k;
+          dk = -k;
           dE = (-2.0*s - pom*dk)*dk;
           Sum += dE;
-          image_set(hopfield->image, i, j, value);
+          image_set(hopfield->image, i, j, (value8/255.0));
         }
       }
     }
@@ -107,6 +112,7 @@ static double hopfield_iteration_period_lambda(hopfield_t* hopfield) {
   int p, r;
   int i, j;
   int k;
+  int value8;
   double dE;
   double Sum;
   double ddui;
@@ -160,27 +166,32 @@ static double hopfield_iteration_period_lambda(hopfield_t* hopfield) {
       pom *= hopfield->lambda;
 
       s += threshold_get(&(hopfield->threshold), i, j);
+      s *= 255.0; /* adjust image from 0.0..1.0 to 0.0..255.0 */
       pom += weights_get(&(hopfield->weights), 0, 0);
 
       ddui = hardlim(s);
       dE = -2.0 * s * ddui - pom;
       if (dE < 0.0) {
         value = image_get(hopfield->image, i, j);
-        dk = ddui - (s/pom);
-        if (dk > 0.5/2147483647.0 && value < 2147483646.5/2147483647.0) {
-          k = (int)(2147483647.0 * min(dk, 1.0 - value) + 0.5/2147483647.0);
-          dk = (1.0/2147483647.0 * (double)(rand()%k));
-          value += dk;
+        value8 = (int)(255.0 * value + 0.5);
+        k = (s >= 0.0 ? 1 :-1);
+        k -= (int)(s/pom);
+        if (k > 0 && value8 < 255) {
+          k = min(k, 255-value8);
+          k = (rand()%k) + 1;
+          value8 += k;
+          dk = k;
           dE = (-2.0*s - pom*dk)*dk;
           Sum += dE;
-          image_set(hopfield->image, i, j, value);
-        } else if (dk < -0.5/2147483647.0 && value > 0.5/2147483647.0) {
-          k = (int)(2147483647.0 * min(-dk, value) + 0.5/2147483647.0);
-          dk = -(1.0/2147483647.0 * (double)(rand()%k));
-          value += dk;
+          image_set(hopfield->image, i, j, (value8/255.0));
+        } else if (k < 0 && value8 > 0) {
+          k = min(-k, value8);
+          k = (rand()%k) + 1;
+          value8 -= k;
+          dk = -k;
           dE = (-2.0*s - pom*dk)*dk;
           Sum += dE;
-          image_set(hopfield->image, i, j, value);
+          image_set(hopfield->image, i, j, (value8/255.0));
         }
       }
     }
@@ -194,6 +205,7 @@ static double hopfield_iteration_mirror(hopfield_t* hopfield) {
   int i,j;
   double s;
   int k;
+  int value8;
   double dE;
   double Sum;
   double ddui;
@@ -234,28 +246,32 @@ static double hopfield_iteration_mirror(hopfield_t* hopfield) {
                    image_get_mirror(hopfield->image, i  , j-1));
 
       s -= hopfield->lambda*z;
-
       s += threshold_get(&(hopfield->threshold), i, j);
+      s *= 255.0; /* adjust image from 0.0..1.0 to 0.0..255.0 */
 
       ddui = hardlim(s);
       dE = -2.0 * s * ddui - pom;
       if (dE < 0.0) {
         value = image_get(hopfield->image, i, j);
-        dk = ddui - (s/pom);
-        if (dk > 0.5/2147483647.0 && value < 2147483646.5/2147483647.0) {
-          k = (int)(2147483647.0 * min(dk, 1.0 - value) + 0.5/2147483647.0);
-          dk = (1.0/2147483647.0 * (double)(rand()%k));
-          value += dk;
+        value8 = (int)(255.0 * value + 0.5);
+        k = (s >= 0.0 ? 1 :-1);
+        k -= (int)(s/pom);
+        if (k>0 && value8 < 255) {
+          k = min(k, 255 - value8);
+          k = (rand()%k)+1;
+          value8 += k;
+          dk = k;
           dE = (-2.0*s - pom*dk)*dk;
           Sum += dE;
-          image_set(hopfield->image, i, j, value);
-        } else if (dk < -0.5/2147483647.0 && value > 0.5/2147483647.0) {
-          k = (int)(2147483647.0 * min(-dk, value) + 0.5/2147483647.0);
-          dk = -(1.0/2147483647.0 * (double)(rand()%k));
-          value += dk;
+          image_set(hopfield->image, i, j, (value8/255.0));
+        } else if (k < 0 && value8 > 0) {
+          k = min(-k, value8);
+          k = (rand()%k)+1;
+          value8 -= k;
+          dk = -k;
           dE = (-2.0*s - pom*dk)*dk;
           Sum += dE;
-          image_set(hopfield->image, i, j, value);
+          image_set(hopfield->image, i, j, (value8/255.0));
         }
       }
     }
@@ -267,6 +283,7 @@ static double hopfield_iteration_mirror_lambda(hopfield_t* hopfield) {
   int p, r;
   int i, j;
   int k;
+  int value8;
   double dE;
   double Sum;
   double ddui;
@@ -320,27 +337,32 @@ static double hopfield_iteration_mirror_lambda(hopfield_t* hopfield) {
       pom *= hopfield->lambda;
 
       s += threshold_get(&(hopfield->threshold), i, j);
+      s *= 255.0; /* adjust image from 0.0..1.0 to 0.0..255.0 */
       pom += weights_get(&(hopfield->weights), 0, 0);
 
       ddui = hardlim(s);
       dE = -2.0 * s * ddui - pom;
       if (dE < 0.0) {
         value = image_get(hopfield->image, i, j);
-        dk = ddui - (s/pom);
-        if (dk > 0.5/2147483647.0 && value < 2147483646.5/2147483647.0) {
-          k = (int)(2147483647.0 * min(dk, 1.0 - value) + 0.5/2147483647.0);
-          dk = (1.0/2147483647.0 * (double)(rand()%k));
-          value += dk;
+        value8 = (int)(255.0 * value + 0.5);
+        k = (s >= 0.0 ? 1 :-1);
+        k -= (int)(s/pom);
+        if (k > 0 && value8 < 255) {
+          k = min(k, 255 - value8);
+          k = (rand()%k) + 1;
+          value8 += k;
+          dk = k;
           dE = (-2.0*s - pom*dk)*dk;
           Sum += dE;
-          image_set(hopfield->image, i, j, value);
-        } else if (dk < -0.5/2147483647.0 && value > 0.5/2147483647.0) {
-          k = (int)(2147483647.0 * min(-dk, value) + 0.5/2147483647.0);
-          dk = -(1.0/2147483647.0 * (double)(rand()%k));
-          value += dk;
+          image_set(hopfield->image, i, j, (value8/255.0));
+        } else if (k < 0 && value8 > 0) {
+          k = min(-k, value8);
+          k = (rand()%k) + 1;
+          value8 -= k;
+          dk = -k;
           dE = (-2.0*s - pom*dk)*dk;
           Sum += dE;
-          image_set(hopfield->image, i, j, value);
+          image_set(hopfield->image, i, j, (value8/255.0));
         }
       }
     }
