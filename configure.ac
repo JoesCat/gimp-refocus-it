@@ -9,7 +9,7 @@ m4_define([plugin_name], [refocus-it])
 
 dnl These two define the plug-in version number
 m4_define([plugin_major_version], [2])
-m4_define([plugin_minor_version], [1])
+m4_define([plugin_minor_version], [2])
 
 m4_define([plugin_version], [plugin_major_version.plugin_minor_version])
 m4_define([plugin_package_name], [gimp-refocus-it])

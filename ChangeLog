@@ -1,3 +1,22 @@
+2025-04-08 (2.2)  Joe Da Silva <digital@joescat.com>
+
+  * Converted deprecated gimp-2.0 code to use gimp-2.10 API, which is
+    same/similar to API used for gimp3 (TODO). Image pixel crunching
+    is now done in linear space regardless of if image encoding is in
+    linear or other formats. The image can be encoded in any formats
+    that gimp-2.10 works with (8,16,32,float,double), however pixel
+    crunching is currently limited to 8bit and could use some example
+    images in other precisions to try/test/debug (Future TODO?).
+  * Fixed a copy-n-paste error introduced into lambda.c in version 2.1
+    concerning mirror/period calculations.
+  * Fixed a bug since 1.0.2 original code concerning minvar not being
+    updated if maxvar initially slowly continued to rise (creating an
+    incorrect minvar). Also noted two functions where the math was
+    doing minvar-maxvar instead of maxvar-minvar subtractions.
+  * Removed more functions that were only used by command-line program.
+  * No http docs exist, however, added summary Help pop-up info.
+  * ./configure --enable-debug now correctly toggles define NDEBUG.
+
 2025-02-20 (2.1)  Joe Da Silva <digital@joescat.com>
 
   * Replaced deprecated INTLTOOL with GETTEXT
