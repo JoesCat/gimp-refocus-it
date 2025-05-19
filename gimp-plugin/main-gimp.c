@@ -69,7 +69,7 @@ static void refocusit_help (const gchar *help_id,
 static void dialog_parameters_create();
 static void dialog_parameters_init();
 static void dialog_elements_update();
-static void dialog_elements_destroy();
+static void dialog_elements_destroy (void);
 static void dialog_response(GtkWidget *widget, gint response_id, gpointer data);
 
 static void input_parameters_init (void);
@@ -87,18 +87,20 @@ static void hopfield_data_save (void);
 static void preview_parameters_init (void);
 static void preview_fetch_hopfield (void);
 static void preview_update (void);
-static void get_lambdas (gdouble* lambda, gdouble* lambda_min);
+static void get_lambdas (gdouble *lambda, gdouble *lambda_min);
 static int compute (int iterations);
 static void motion_angle_draw (gboolean complete_redraw);
-static void motion_angle_xy_calculate (gfloat x, gfloat y);
+static void motion_angle_xy_calculate (gdouble x, gdouble y);
 
 /* CONSTANTS */
 
-static const char PROCEDURE_NAME[] =
+static const char PLUG_IN_PROC[] =
   "plug-in-" PLUGIN_NAME;
-static const char SHORT_DESCRIPTION[] = d_(
+static const char PLUG_IN_MENU_LOCATION[] = "<Image>/Filters/Enhance";
+static const char PLUG_IN_MENU_LABEL[] = d_("Iterative Refocus...");
+static const char PLUG_IN_SHORT_DESC[] = d_(
   "This plug-in iteratively refocuses a defocused image.");
-static const char LONG_DESCRIPTION[] = d_(
+static const char PLUG_IN_LONG_DESC[] = d_(
   "The Iterative Refocus plug-in can sharpen images acquired by a defocused camera "
   "blurred with gaussian or motion blur or any combination of these degradations.\n\n"
   "Nice features are adaptive/static area smoothing to remove 'ringing' effect "
@@ -116,59 +118,59 @@ const GimpPlugInInfo PLUG_IN_INFO = {
 /* DATA STRUCTURES */
 
 typedef struct {
-  char         *name;
-  GtkWidget    *menu_item;
+  char          *name;
+  GtkWidget     *menu_item;
 } SListbox;
 
 typedef void (*FListboxHandler)(GtkWidget*, guint);
 
 typedef struct {
-  GtkWidget    *preview;
-  guint         x;
-  guint         y;
-  guint         width;
-  guint         height;
-  guint         size;
-  guchar       *data;
-  gdouble      *linear;
-  const Babl   *rgb8;
+  GtkWidget     *preview;
+  guint          x;
+  guint          y;
+  guint          width;
+  guint          height;
+  guint          size;
+  guchar        *data;
+  gdouble       *linear;
+  const Babl    *rgb8;
 } SPreview;
 
 typedef struct {
-  gdouble       radius;
-  gdouble       gauss;
-  gdouble       motion;
-  gdouble       mot_angle;
-  gdouble       lambda;
-  gdouble       lambda_min;
-  guint         winsize;
-  guint         iterations;
-  guint         boundary;
-  guint         adaptive_smooth;
-  guint         prev_iter;
+  gdouble        radius;
+  gdouble        gauss;
+  gdouble        motion;
+  gdouble        mot_angle;
+  gdouble        lambda;
+  gdouble        lambda_min;
+  guint          winsize;
+  guint          iterations;
+  guint          boundary;
+  guint          adaptive_smooth;
+  guint          prev_iter;
 } SInputParameters;
 
 typedef struct {
-  guint         sel_width;
-  guint         sel_height;
-  gint          sel_x1;
-  gint          sel_y1;
-  gint          sel_x2;
-  gint          sel_y2;
-  gint          img_bpp;
-  guint         size;
-  gboolean      gray;
-  gboolean      rgb;
-  GimpDrawable *drawable;
-  GeglBuffer   *srcBuf;
-  GeglBuffer   *destBuf;
-  gdouble      *srcImg;
-  guchar       *destImg;
-  const Babl   *format;
-  const Babl   *linear;
-  gint          xImg;
-  gint          yImg;
-  gint          bppImg;
+  guint          sel_width;
+  guint          sel_height;
+  gint           sel_x1;
+  gint           sel_y1;
+  gint           sel_x2;
+  gint           sel_y2;
+  gint           img_bpp;
+  guint          size;
+  gboolean       gray;
+  gboolean       rgb;
+  GimpDrawable  *drawable;
+  GeglBuffer    *srcBuf;
+  GeglBuffer    *destBuf;
+  gdouble       *srcImg;
+  guchar        *destImg;
+  const Babl    *format;
+  const Babl    *linear;
+  gint           xImg;
+  gint           yImg;
+  gint           bppImg;
 } SImageParameters;
 
 typedef struct {
@@ -189,43 +191,43 @@ typedef struct {
 } SDialogParameters;
 
 typedef struct {
-  GtkWidget* progress;
-  GtkWidget* motion_angle_dra;
-  GtkWidget* adaptive;
-  GtkWidget* area_smooth;
-  GtkWidget* boundary;
-  GtkWidget* dialog;
+  GtkWidget     *progress;
+  GtkWidget     *motion_angle_dra;
+  GtkWidget     *adaptive;
+  GtkWidget     *area_smooth;
+  GtkWidget     *boundary;
+  GtkWidget     *dialog;
 } SDialogElements;
 
 typedef struct {
-  image_t    imageR;
-  image_t    imageG;
-  image_t    imageB;
-  hopfield_t hopfieldR;
-  hopfield_t hopfieldG;
-  hopfield_t hopfieldB;
-  convmask_t blur;
-  convmask_t filter;
-  lambda_t   lambdafldR;
-  lambda_t   lambdafldG;
-  lambda_t   lambdafldB;
+  image_t        imageR;
+  image_t        imageG;
+  image_t        imageB;
+  hopfield_t     hopfieldR;
+  hopfield_t     hopfieldG;
+  hopfield_t     hopfieldB;
+  convmask_t     blur;
+  convmask_t     filter;
+  lambda_t       lambdafldR;
+  lambda_t       lambdafldG;
+  lambda_t       lambdafldB;
 } SHopfield;
 
 /* STATIC DATA */
 
-static SDialogElements    dialog_elements;
-static SDialogParameters  dialog_parameters;
-static SInputParameters   input_parameters;
-static SImageParameters   image_parameters;
-static SPreview           preview;
-static SHopfield          hopfield;
-static SListbox           boundary_listbox[BOUNDARY_LAST + 1];
+static SDialogElements   dialog_elements;
+static SDialogParameters dialog_parameters;
+static SInputParameters  input_parameters;
+static SImageParameters  image_parameters;
+static SPreview          preview;
+static SHopfield         hopfield;
+static SListbox          boundary_listbox[BOUNDARY_LAST + 1];
 
 /* CALLBACKS */
 
 static void no_smooth_callback (GtkWidget *widget, gpointer data) {
   if (dialog_elements.area_smooth) {
-    if (dialog_parameters.lambda->value < 1e-6) {
+    if (gtk_adjustment_get_value (dialog_parameters.lambda) < 1e-6) {
       gtk_widget_set_sensitive (GTK_WIDGET (dialog_elements.area_smooth), FALSE);
       dialog_parameters.area_smooth_enabled = FALSE;
     } else {
@@ -238,37 +240,37 @@ static void no_smooth_callback (GtkWidget *widget, gpointer data) {
 }
 
 static void motion_vector_change_callback (GtkWidget *widget, gpointer data) {
-  motion_angle_draw(FALSE);
+  motion_angle_draw (FALSE);
 }
 
-static gboolean motion_vector_expose_callback (GtkWidget *widget, GdkEvent* gdkev, gpointer data) {
-  motion_angle_draw(TRUE);
+static gboolean motion_vector_expose_callback (GtkWidget *widget, GdkEvent *gdkev, gpointer data) {
+  motion_angle_draw (TRUE);
   return FALSE;
 }
 
-static gboolean motion_vector_mouse_move_callback (GtkWidget *widget, GdkEvent* gdkev, gpointer data) {
-  motion_angle_xy_calculate(gdkev->motion.x, gdkev->motion.y);
+static gboolean motion_vector_mouse_move_callback (GtkWidget *widget, GdkEvent *gdkev, gpointer data) {
+  motion_angle_xy_calculate (gdkev->motion.x, gdkev->motion.y);
   return FALSE;
 }
 
-static gboolean motion_vector_mouse_release_callback (GtkWidget *widget, GdkEvent* gdkev, gpointer data) {
+static gboolean motion_vector_mouse_release_callback (GtkWidget *widget, GdkEvent *gdkev, gpointer data) {
   if (gdkev->button.button == MOTION_ANGLE_BUTTON) {
-    gtk_signal_disconnect_by_func (GTK_OBJECT (widget), GTK_SIGNAL_FUNC (motion_vector_mouse_release_callback), NULL);
-    gtk_signal_disconnect_by_func (GTK_OBJECT (widget), GTK_SIGNAL_FUNC (motion_vector_mouse_move_callback), NULL);
+    g_signal_handlers_disconnect_by_func (G_OBJECT (widget), G_CALLBACK (motion_vector_mouse_release_callback), NULL);
+    g_signal_handlers_disconnect_by_func (G_OBJECT (widget), G_CALLBACK (motion_vector_mouse_move_callback), NULL);
   }
   return FALSE;
 }
 
-static gboolean motion_vector_mouse_press_callback (GtkWidget *widget, GdkEvent* gdkev, gpointer data) {
+static gboolean motion_vector_mouse_press_callback (GtkWidget *widget, GdkEvent *gdkev, gpointer data) {
   if (gdkev->button.button == MOTION_ANGLE_BUTTON) {
     motion_angle_xy_calculate (gdkev->button.x, gdkev->button.y);
-    gtk_signal_connect (GTK_OBJECT (widget), "button-release-event", GTK_SIGNAL_FUNC (motion_vector_mouse_release_callback), NULL);
-    gtk_signal_connect (GTK_OBJECT (widget), "motion-notify-event", GTK_SIGNAL_FUNC (motion_vector_mouse_move_callback), NULL);
+    g_signal_connect (G_OBJECT (widget), "button-release-event", G_CALLBACK (motion_vector_mouse_release_callback), NULL);
+    g_signal_connect (G_OBJECT (widget), "motion-notify-event", G_CALLBACK (motion_vector_mouse_move_callback), NULL);
   }
   return FALSE;
 }
 
-static void boundary_callback (GtkWidget* menu_item, guint index) {
+static void boundary_callback (GtkWidget *menu_item, guint index) {
   input_parameters.boundary = (guchar)index;
 }
 
@@ -307,8 +309,8 @@ static void preview_callback (GtkWidget *widget, gpointer data) {
 }
 
 static void preview_scroll_callback (GtkWidget *widget, gpointer data) {
-  preview.x = (guint)dialog_parameters.hscroll->value;
-  preview.y = (guint)dialog_parameters.vscroll->value;
+  preview.x = (guint)(gtk_adjustment_get_value (dialog_parameters.hscroll));
+  preview.y = (guint)(gtk_adjustment_get_value (dialog_parameters.vscroll));
   preview_update ();
 }
 
@@ -345,17 +347,17 @@ static void query (void) {
   textdomain (GETTEXT_PACKAGE);
 #endif
 
-  gimp_install_procedure (PROCEDURE_NAME, _(SHORT_DESCRIPTION), _(LONG_DESCRIPTION),
+  gimp_install_procedure (PLUG_IN_PROC, _(PLUG_IN_SHORT_DESC), _(PLUG_IN_LONG_DESC),
   /* copyright author  */ "Lukas Kunc, 2004, <Lukas.Kunc@seznam.cz>",
   /* copyright license */ "GPL3+",
   /* build date        */ "2025",
-  /* menu entry        */ _("Iterative refocus..."),
+  /* menu entry        */ PLUG_IN_MENU_LABEL,
                           "RGB*, GRAY*",
                           GIMP_PLUGIN,
                           G_N_ELEMENTS (args), 0,
                           args, 0);
   gimp_plugin_domain_register (GETTEXT_PACKAGE, LOCALEDIR);
-  gimp_plugin_menu_register (PROCEDURE_NAME, "<Image>/Filters/Enhance");
+  gimp_plugin_menu_register (PLUG_IN_PROC, PLUG_IN_MENU_LOCATION);
 }
 
 static void input_parameters_destroy (void) {
@@ -398,29 +400,29 @@ static void input_parameters_fetch_params (const GimpParam *param) {
 }
 
 static void input_parameters_fetch_dlg () {
-  input_parameters.radius          = dialog_parameters.radius->value;
-  input_parameters.gauss           = dialog_parameters.gauss->value;
-  input_parameters.motion          = dialog_parameters.motion->value;
-  input_parameters.mot_angle       = dialog_parameters.mot_angle->value;
-  input_parameters.lambda          = dialog_parameters.lambda->value;
-  input_parameters.lambda_min      = dialog_parameters.lambda_min->value;
-  input_parameters.winsize         = (guint) dialog_parameters.winsize->value;
-  input_parameters.iterations      = (guint) dialog_parameters.iterations->value;
-  input_parameters.prev_iter       = (guint) dialog_parameters.prev_iter->value;
+  input_parameters.radius          = gtk_adjustment_get_value (dialog_parameters.radius);
+  input_parameters.gauss           = gtk_adjustment_get_value (dialog_parameters.gauss);
+  input_parameters.motion          = gtk_adjustment_get_value (dialog_parameters.motion);
+  input_parameters.mot_angle       = gtk_adjustment_get_value (dialog_parameters.mot_angle);
+  input_parameters.lambda          = gtk_adjustment_get_value (dialog_parameters.lambda);
   /* no action for boundary - updated automatically */
+  input_parameters.lambda_min      = gtk_adjustment_get_value (dialog_parameters.lambda_min);
+  input_parameters.winsize         = (guint)(gtk_adjustment_get_value (dialog_parameters.winsize));
+  input_parameters.iterations      = (guint)(gtk_adjustment_get_value (dialog_parameters.iterations));
+  input_parameters.prev_iter       = (guint)(gtk_adjustment_get_value (dialog_parameters.prev_iter));
   input_parameters.adaptive_smooth = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (dialog_elements.adaptive));
 }
 
 static void dialog_parameters_init () {
-  gtk_adjustment_set_value(dialog_parameters.radius,     (gfloat)input_parameters.radius);
-  gtk_adjustment_set_value(dialog_parameters.gauss,      (gfloat)input_parameters.gauss);
-  gtk_adjustment_set_value(dialog_parameters.motion,     (gfloat)input_parameters.motion);
-  gtk_adjustment_set_value(dialog_parameters.mot_angle,  (gfloat)input_parameters.mot_angle);
-  gtk_adjustment_set_value(dialog_parameters.lambda,     (gfloat)input_parameters.lambda);
-  gtk_adjustment_set_value(dialog_parameters.lambda_min, (gfloat)input_parameters.lambda_min);
-  gtk_adjustment_set_value(dialog_parameters.winsize,    (gfloat)input_parameters.winsize);
-  gtk_adjustment_set_value(dialog_parameters.iterations, (gfloat)input_parameters.iterations);
-  gtk_adjustment_set_value(dialog_parameters.prev_iter,  (gfloat)input_parameters.prev_iter);
+  gtk_adjustment_set_value (dialog_parameters.radius,     input_parameters.radius);
+  gtk_adjustment_set_value (dialog_parameters.gauss,      input_parameters.gauss);
+  gtk_adjustment_set_value (dialog_parameters.motion,     input_parameters.motion);
+  gtk_adjustment_set_value (dialog_parameters.mot_angle,  input_parameters.mot_angle);
+  gtk_adjustment_set_value (dialog_parameters.lambda,     input_parameters.lambda);
+  gtk_adjustment_set_value (dialog_parameters.lambda_min, input_parameters.lambda_min);
+  gtk_adjustment_set_value (dialog_parameters.winsize,    input_parameters.winsize);
+  gtk_adjustment_set_value (dialog_parameters.iterations, input_parameters.iterations);
+  gtk_adjustment_set_value (dialog_parameters.prev_iter,  input_parameters.prev_iter);
   dialog_parameters.area_smooth_enabled = TRUE;
 }
 
@@ -428,22 +430,22 @@ static void dialog_parameters_create () {
   dialog_parameters.frun = FALSE;
   dialog_parameters.finish = FALSE;
 
-  dialog_parameters.radius     = GTK_ADJUSTMENT (gtk_adjustment_new ((gfloat)input_parameters.radius, 0.0f, 32.0f, 0.01f, 0.1f, 0.0f));
-  dialog_parameters.gauss      = GTK_ADJUSTMENT (gtk_adjustment_new ((gfloat)input_parameters.gauss, 0.0f, 32.0f, 0.01f, 0.1f, 0.0f));
-  dialog_parameters.motion     = GTK_ADJUSTMENT (gtk_adjustment_new ((gfloat)input_parameters.motion, 0.0f, 32.0f, 0.01f, 0.1f, 0.0f));
-  dialog_parameters.mot_angle  = GTK_ADJUSTMENT (gtk_adjustment_new ((gfloat)input_parameters.motion, 0.0f, 360.0f, 0.01f, 0.1f, 0.0f));
-  dialog_parameters.lambda     = GTK_ADJUSTMENT (gtk_adjustment_new ((gfloat)input_parameters.lambda, 0.0f, (gfloat)LAMBDA_MAX, 0.1f, 1.0f, 0.0f));
-  dialog_parameters.lambda_min = GTK_ADJUSTMENT (gtk_adjustment_new ((gfloat)input_parameters.lambda_min, 0.0f, (gfloat)LAMBDAMIN_MAX, 0.1f, 1.0f, 0.0f));
-  dialog_parameters.winsize    = GTK_ADJUSTMENT (gtk_adjustment_new ((gfloat)input_parameters.winsize, 1.0f, 16.0f, 1.0f, 1.0f, 0.0f));
-  dialog_parameters.iterations = GTK_ADJUSTMENT (gtk_adjustment_new ((gfloat)input_parameters.iterations, 1.0f, 200.0f, 1.0f, 10.0f, 0.0f));
-  dialog_parameters.prev_iter  = GTK_ADJUSTMENT (gtk_adjustment_new ((gfloat)input_parameters.prev_iter, 1.0f, 20.0f, 1.0f, 1.0f, 0.0f));
-  dialog_parameters.hscroll    = GTK_ADJUSTMENT (gtk_adjustment_new (0.0f, 0.0f, (gfloat)image_parameters.sel_width - 1.0f, 1.0f, (gfloat)preview.width, (gfloat)preview.width));
-  dialog_parameters.vscroll    = GTK_ADJUSTMENT (gtk_adjustment_new (0.0f, 0.0f, (gfloat)image_parameters.sel_height - 1.0f, 1.0f, (gfloat)preview.height, (gfloat)preview.height));
+  dialog_parameters.radius     = GTK_ADJUSTMENT (gtk_adjustment_new (input_parameters.radius, 0.0, 32.0, 0.01, 0.1, 0.0));
+  dialog_parameters.gauss      = GTK_ADJUSTMENT (gtk_adjustment_new (input_parameters.gauss, 0.0, 32.0, 0.01, 0.1, 0.0));
+  dialog_parameters.motion     = GTK_ADJUSTMENT (gtk_adjustment_new (input_parameters.motion, 0.0, 32.0, 0.01, 0.1, 0.0));
+  dialog_parameters.mot_angle  = GTK_ADJUSTMENT (gtk_adjustment_new (input_parameters.motion, 0.0, 360.0, 0.01, 0.1, 0.0));
+  dialog_parameters.lambda     = GTK_ADJUSTMENT (gtk_adjustment_new (input_parameters.lambda, 0.0, LAMBDA_MAX, 0.1, 1.0, 0.0));
+  dialog_parameters.lambda_min = GTK_ADJUSTMENT (gtk_adjustment_new (input_parameters.lambda_min, 0.0, LAMBDAMIN_MAX, 0.1, 1.0, 0.0));
+  dialog_parameters.winsize    = GTK_ADJUSTMENT (gtk_adjustment_new (input_parameters.winsize, 1.0, 16.0, 1.0, 1.0, 0.0));
+  dialog_parameters.iterations = GTK_ADJUSTMENT (gtk_adjustment_new (input_parameters.iterations, 1.0, 200.0, 1.0, 10.0, 0.0));
+  dialog_parameters.prev_iter  = GTK_ADJUSTMENT (gtk_adjustment_new (input_parameters.prev_iter, 1.0, 20.0, 1.0, 1.0, 0.0));
+  dialog_parameters.hscroll    = GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.0, image_parameters.sel_width - 1.0, 1.0, preview.width, preview.width));
+  dialog_parameters.vscroll    = GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.0, image_parameters.sel_height - 1.0, 1.0, preview.height, preview.height));
 
-  gtk_signal_connect (GTK_OBJECT (dialog_parameters.mot_angle), "value_changed", GTK_SIGNAL_FUNC (motion_vector_change_callback), NULL);
-  gtk_signal_connect (GTK_OBJECT (dialog_parameters.lambda), "value_changed", GTK_SIGNAL_FUNC (no_smooth_callback), NULL);
-  gtk_signal_connect (GTK_OBJECT (dialog_parameters.hscroll), "value_changed", GTK_SIGNAL_FUNC (preview_scroll_callback), NULL);
-  gtk_signal_connect (GTK_OBJECT (dialog_parameters.vscroll), "value_changed", GTK_SIGNAL_FUNC (preview_scroll_callback), NULL);
+  g_signal_connect (G_OBJECT (dialog_parameters.mot_angle), "value_changed", G_CALLBACK (motion_vector_change_callback), NULL);
+  g_signal_connect (G_OBJECT (dialog_parameters.lambda), "value_changed", G_CALLBACK (no_smooth_callback), NULL);
+  g_signal_connect (G_OBJECT (dialog_parameters.hscroll), "value_changed", G_CALLBACK (preview_scroll_callback), NULL);
+  g_signal_connect (G_OBJECT (dialog_parameters.vscroll), "value_changed", G_CALLBACK (preview_scroll_callback), NULL);
 
   boundary_listbox[BOUNDARY_MIRROR].name = _("mirror boundary");
   boundary_listbox[BOUNDARY_PERIODICAL].name = _("periodical boundary");
@@ -453,7 +455,7 @@ static void dialog_parameters_create () {
 static void dialog_elements_update () {
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (dialog_elements.adaptive), input_parameters.adaptive_smooth);
   gtk_option_menu_set_history (GTK_OPTION_MENU (dialog_elements.boundary), input_parameters.boundary);
-  if (dialog_elements.area_smooth && dialog_parameters.lambda->value < 1e-6) {
+  if (dialog_elements.area_smooth && gtk_adjustment_get_value (dialog_parameters.lambda) < 1e-6) {
     gtk_widget_set_sensitive (GTK_WIDGET (dialog_elements.area_smooth), FALSE);
     dialog_parameters.area_smooth_enabled = FALSE;
   }
@@ -508,7 +510,8 @@ static int image_parameters_init (const GimpParam *param, GimpParam *values) {
   image_parameters.img_bpp    = gimp_drawable_bpp (image_parameters.drawable->drawable_id);
   image_parameters.size       = image_parameters.sel_width * image_parameters.sel_height;
 
-  preview.data = preview.linear = NULL;
+  preview.data = NULL;
+  preview.linear = NULL;
   return 0;
 }
 
@@ -630,9 +633,9 @@ static void hopfield_data_destroy (void) {
 }
 
 static void hopfield_data_save (void) {
-  gint32      drawable_ID;
-  gdouble    *ptr;
-  gint        x, y, xImg, yImg;
+  gint32   drawable_ID;
+  gdouble *ptr;
+  gint     x, y, xImg, yImg;
 
   drawable_ID = image_parameters.drawable->drawable_id;
   xImg = image_parameters.xImg;
@@ -759,7 +762,7 @@ static void preview_update (void) {
 
 /* GUI ELEMENTS */
 
-static GtkWidget* scaler_new (GtkAdjustment* adj, gfloat climb_rate, guint digits) {
+static GtkWidget *scaler_new (GtkAdjustment *adj, gfloat climb_rate, guint digits) {
   GtkWidget *box;
   GtkWidget *element;
 
@@ -780,10 +783,10 @@ static GtkWidget* scaler_new (GtkAdjustment* adj, gfloat climb_rate, guint digit
   return box;
 }
 
-static GtkWidget* listbox_new (SListbox* listdef, FListboxHandler handler, guint active) {
-  GtkWidget* element;
-  GtkWidget* listbox;
-  GtkWidget* menu;
+static GtkWidget *listbox_new (SListbox *listdef, FListboxHandler handler, guint active) {
+  GtkWidget *element;
+  GtkWidget *listbox;
+  GtkWidget *menu;
   guint      item;
 
   listbox = gtk_option_menu_new ();
@@ -792,7 +795,7 @@ static GtkWidget* listbox_new (SListbox* listdef, FListboxHandler handler, guint
   while (listdef->name) {
     element = gtk_menu_item_new_with_label (listdef->name);
     gtk_menu_shell_append (GTK_MENU_SHELL (menu), element);
-    gtk_signal_connect (GTK_OBJECT (element), "activate", GTK_SIGNAL_FUNC (handler), GUINT_TO_POINTER (item));
+    g_signal_connect (G_OBJECT (element), "activate", G_CALLBACK (handler), GUINT_TO_POINTER (item));
     gtk_widget_show (element);
     listdef->menu_item = element;
     listdef++; item++;
@@ -803,7 +806,7 @@ static GtkWidget* listbox_new (SListbox* listdef, FListboxHandler handler, guint
   return listbox;
 }
 
-static GtkWidget* create_degradation_params () {
+static GtkWidget *create_degradation_params () {
   GtkWidget *frame;
   GtkWidget *table;
   GtkWidget *element;
@@ -891,7 +894,7 @@ static GtkWidget* create_degradation_params () {
   return frame;
 }
 
-static GtkWidget* create_area_params () {
+static GtkWidget *create_area_params () {
   GtkWidget *frame;
   GtkWidget *table;
   GtkWidget *element;
@@ -938,7 +941,7 @@ static GtkWidget* create_area_params () {
   return frame;
 }
 
-static GtkWidget* create_controls () {
+static GtkWidget *create_controls () {
   GtkWidget *vbox;
   GtkWidget *element;
 
@@ -954,7 +957,7 @@ static GtkWidget* create_controls () {
   gtk_box_pack_start (GTK_BOX (vbox), element, FALSE, FALSE, 0);
   gtk_widget_show (element);
 
-  /* progress */
+  /* progress bar */
   element = dialog_elements.progress = gtk_progress_bar_new ();
   gtk_box_pack_start (GTK_BOX (vbox), element, FALSE, FALSE, 0);
   gtk_widget_show (element);
@@ -973,15 +976,15 @@ static void motion_angle_draw (gboolean complete_redraw) {
       gdk_draw_arc (dialog_elements.motion_angle_dra->window, dialog_elements.motion_angle_dra->style->black_gc, TRUE,
                     0, 0, MOTION_ANGLE_DRA_SIZE, MOTION_ANGLE_DRA_SIZE, 0, 360*64);
     }
-    a = dialog_parameters.mot_angle->value * M_PI / 180.0;
+    a = gtk_adjustment_get_value (dialog_parameters.mot_angle) * M_PI / 180.0;
     x = y = MOTION_ANGLE_DRA_MIDDLE - 1;
     x *= cos(a);
     y *= sin(a);
     gdk_draw_line (dialog_elements.motion_angle_dra->window, dialog_elements.motion_angle_dra->style->black_gc,
                    MOTION_ANGLE_DRA_MIDDLE, MOTION_ANGLE_DRA_MIDDLE, ox, oy);
 
-    ox = MOTION_ANGLE_DRA_MIDDLE + (gint) (x+0.5);
-    oy = MOTION_ANGLE_DRA_MIDDLE - (gint) (y+0.5);
+    ox = MOTION_ANGLE_DRA_MIDDLE + (gint)(x+0.5);
+    oy = MOTION_ANGLE_DRA_MIDDLE - (gint)(y+0.5);
 
     gdk_draw_line (dialog_elements.motion_angle_dra->window, dialog_elements.motion_angle_dra->style->white_gc,
                    MOTION_ANGLE_DRA_MIDDLE, MOTION_ANGLE_DRA_MIDDLE, ox, oy);
@@ -989,7 +992,7 @@ static void motion_angle_draw (gboolean complete_redraw) {
   }
 }
 
-static GtkWidget* motion_angle_create () {
+static GtkWidget *motion_angle_create () {
   GtkWidget *frame;
   GtkWidget *box;
   GtkWidget *element;
@@ -1009,16 +1012,16 @@ static GtkWidget* motion_angle_create () {
   gtk_widget_show (frame);
 
   gtk_widget_add_events (element, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_POINTER_MOTION_MASK);
-  gtk_signal_connect (GTK_OBJECT (element), "expose-event", GTK_SIGNAL_FUNC (motion_vector_expose_callback), NULL);
-  gtk_signal_connect (GTK_OBJECT (element), "button-press-event", GTK_SIGNAL_FUNC (motion_vector_mouse_press_callback), NULL);
+  g_signal_connect (G_OBJECT (element), "expose-event", G_CALLBACK (motion_vector_expose_callback), NULL);
+  g_signal_connect (G_OBJECT (element), "button-press-event", G_CALLBACK (motion_vector_mouse_press_callback), NULL);
 
   return frame;
 }
 
-static void motion_angle_xy_calculate (gfloat x, gfloat y) {
+static void motion_angle_xy_calculate (gdouble x, gdouble y) {
   gfloat r, a;
 
-  x -= MOTION_ANGLE_DRA_MIDDLE; 
+  x -= MOTION_ANGLE_DRA_MIDDLE;
   y = MOTION_ANGLE_DRA_MIDDLE - y;
   r = sqrt(x*x + y*y);
   if (r < 1e-4) a = 0.0;
@@ -1029,7 +1032,7 @@ static void motion_angle_xy_calculate (gfloat x, gfloat y) {
   gtk_adjustment_set_value (dialog_parameters.mot_angle, a);
 }
 
-static GtkWidget* preview_create () {
+static GtkWidget *preview_create () {
   GtkWidget *frame;
   GtkWidget *vbox, *hbox;
   GtkWidget *element;
@@ -1092,15 +1095,18 @@ static gboolean dialog (void) {
   GtkWidget *hbox;
   GtkWidget *dlg;
   GtkWidget *vbox;
+  gchar     *title;
 
-  dialog_elements.dialog = dlg = gimp_dialog_new (_("Iterative Refocus"), "iterefocus",
+  title = g_strdup_printf (_("Iterative Refocus"));
+  dialog_elements.dialog = dlg = gimp_dialog_new (title, "iterefocus",
                 NULL, 0,
-                refocusit_help, PROCEDURE_NAME,
+                refocusit_help, PLUG_IN_PROC,
                 GTK_STOCK_OK, GTK_RESPONSE_OK,
                 GIMP_STOCK_RESET, RESPONSE_RESET, 
                 _("Preview"), RESPONSE_PREVIEW,
                 GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, 
                 NULL);
+  g_free (title);
 
   g_signal_connect (dlg, "response", G_CALLBACK (dialog_response), NULL);
   g_signal_connect (dlg, "destroy", G_CALLBACK (destroy_callback), NULL);
@@ -1141,7 +1147,7 @@ static gboolean dialog (void) {
   return dialog_parameters.frun;
 }
 
-static void get_lambdas (gdouble* lambda, gdouble* lambda_min) {
+static void get_lambdas (gdouble *lambda, gdouble *lambda_min) {
   *lambda_min = 1.0 / exp (input_parameters.lambda_min / 4.0);
   *lambda = input_parameters.lambda / LAMBDA_MAX * 0.001 / *lambda_min;
 }
@@ -1152,15 +1158,17 @@ static void event_loop () {
 
 static void progress_bar_init () {
   if (dialog_elements.progress) {
-    gtk_progress_bar_update (GTK_PROGRESS_BAR (dialog_elements.progress), 0.0);
+//    gtk_progress_bar_update (GTK_PROGRESS_BAR (dialog_elements.progress), 0.0);
+    gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR (dialog_elements.progress), 0.0);
   } else {
-    gimp_progress_init(_("Refocusing..."));
+    gimp_progress_init (_("Refocusing..."));
   }
 }
 
-static void progress_bar_update (gfloat fraction) {
+static void progress_bar_update (gdouble fraction) {
   if (dialog_elements.progress) {
-    gtk_progress_bar_update (GTK_PROGRESS_BAR (dialog_elements.progress), fraction);
+//    gtk_progress_bar_update (GTK_PROGRESS_BAR (dialog_elements.progress), fraction);
+    gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR (dialog_elements.progress), fraction);
   } else {
     gimp_progress_update (fraction);
   }
@@ -1170,7 +1178,8 @@ static void progress_bar_update (gfloat fraction) {
 
 static void progress_bar_reset () {
   if (dialog_elements.progress) {
-    gtk_progress_bar_update (GTK_PROGRESS_BAR (dialog_elements.progress), 0.0);
+//    gtk_progress_bar_update (GTK_PROGRESS_BAR (dialog_elements.progress), 0.0);
+    gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR (dialog_elements.progress), 0.0);
   } else {
     gimp_progress_update (0.0);
   }
@@ -1508,5 +1517,5 @@ run (const gchar *name, gint nparams, const GimpParam *param,
 }
 
 static void refocusit_help (const gchar *help_id, gpointer help_data) {
-  gimp_message(_(LONG_DESCRIPTION));
+  gimp_message(_(PLUG_IN_LONG_DESC));
 }

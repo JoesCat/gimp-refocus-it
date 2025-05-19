@@ -17,8 +17,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: ../gimp-plugin/main-gimp.c:374
-msgid "Iterative refocus..."
-msgstr "Iterativní doostření..."
+msgid "Iterative Refocus..."
+msgstr "Iterativní Doostření..."
 
 #: ../gimp-plugin/main-gimp.c:381
 msgid "Iterative refocus."

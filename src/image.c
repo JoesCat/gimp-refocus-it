@@ -40,9 +40,11 @@ void image_destroy(image_t* image) {
   free(image->data);
 }
 
-static void image_init(image_t* image) {
-  image->data = NULL;
-}
+/* not needed
+ * static void image_init(image_t* image) {
+ *   image->data = NULL;
+ * }
+ */
 
 double image_get(image_t* image, int x, int y) {
   return (image->data[y * image->x + x]);

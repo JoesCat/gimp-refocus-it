@@ -51,7 +51,7 @@ uninstall-user:
 update-pot: $(GETTEXT_PACKAGE).pot
 
 $(GETTEXT_PACKAGE).pot:
-	$(XGETTEXT) -k_ -k_\" -kd_\" -c -d $(GETTEXT_PACKAGE) -o $@ \
+	$(XGETTEXT) -k_ -k_\( -kd_\( -c -d $(GETTEXT_PACKAGE) -o $@ \
 	--package-version=$(PLUGIN_VERSION) --msgid-bugs-address=$(PLUGIN_EMAIL) --package-name=$(PLUGIN_PACKAGE_NAME) \
 	$(top_srcdir)/gimp-plugin/*.c
 
