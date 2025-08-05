@@ -12,7 +12,7 @@ jobs:
       - name: Create configure
         run: |
           sudo apt-get update -y
-          sudo apt-get install autoconf automake libtool gcc gimp libgimp2.0-dev
+          sudo apt-get install autoconf automake libtool gcc gimp3 libgimp3.0-dev
           autoreconf -i
           automake
       - name: Choose configure
@@ -26,3 +26,31 @@ jobs:
         run: |
           sudo make install
           sudo make uninstall
+  win:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        include: [
+          {msystem: MINGW64, toolchain: mingw-w64-x86_64, version: x64 },
+          {msystem: UCRT64, toolchain: mingw-w64-ucrt-x86_64, version: x64 },
+          {msystem: CLANG64, toolchain: mingw-w64-clang-x86_64, version: x64 },
+        ]
+    name: ${{ matrix.msystem }}
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.msystem }}
+          update: true
+          install: autotools base-devel git ${{ matrix.toolchain }}-toolchain ${{ matrix.toolchain }}-gimp3 ${{ matrix.toolchain }}-gettext-tools
+      - name: Create configure
+        run: |
+          autoreconf -i
+          automake
+      - name: run ./configure
+        run: ./configure
+      - name: Make gimp-refocus-it
+        run: make

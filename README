@@ -1,4 +1,4 @@
-The Iterative refocus Gimp-2.10 plug-in can be used to sharpen images acquired
+The Iterative refocus Gimp-3 plug-in can be used to sharpen images acquired
 by a defocused camera, blurred with gaussian or motion blur or any combination
 of these degradations. In cases of severe blur it produces much better
 results than plug-ins such as sharpen or unsharp mask.
@@ -13,7 +13,9 @@ and CPU requirements.
 
 This plug-in has a preview that helps you select the best parameters.
 
-This version of the plug-in requires gimp-2.10.30 or newer.
+This version of the plug-in requires gimp-3.0.x or newer.
+Select tag release 2.2 if you require gimp-2.10.3x, which you can access from
+here: https://github.com/JoesCat/gimp-refocus-it/releases
 
 ---
 INSTALLATION
@@ -33,10 +35,22 @@ For more details how to use configure, type:
 ---
 Notes from 2004:
 I hope you like the plug-in and the command-line version. If you have any
-problems or requests please mail me.
+problems or requests please mail me. Lukas Kunc <Lukas.Kunc@seznam.cz>
 
-Lukas Kunc <Lukas.Kunc@seznam.cz>
-
----
 Thanks to Ernst Lippe <ernstl@users.sourceforge.net> for making his Refocus
 Gimp plug-in and all authors of the GIMP.
+
+---
+Notes from 2025:
+branch:gimp2
+Several updates and patches were added to bring gimp-refocus-it to work with
+gimp-2.10 and later, most notably, upgrading intl local languages to use the
+current GETTEXT, replacing xmalloc with generic malloc and cleanup, do every
+calculations in double (since gimp-2.10 uses this), convert calculations for
+using {0.0..1.0} instead of {0..255}, and convert calculations to be done in
+linear space since we are working with fractions of pixels.
+
+master:gimp3
+gimp-refocus-it improves on the above by making this work all with gimp-3.
+
+Joe Da Silva.

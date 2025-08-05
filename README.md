@@ -1,28 +1,32 @@
 # Refocus-it
 
 - Introduction
-- Documentation
 - Examples
 - News
 - Author
 
 ## Introduction
 
-The Refocus-it [GIMP](http://www.gimp.org/) plug-in, released under [GNU General Public License (GPL)](COPYING), can be used to refocus images acquired by a defocused camera, blurred by gaussian or motion blur or any combination of these.
+The gimp-refocus-it plug-in [GIMP](http://www.gimp.org/), released under the
+[GNU General Public License (GPL)](COPYING), can be used to refocus images
+acquired by a defocused camera, blurred by gaussian or motion blur or any
+combination of these.
 
-There are a few nice features of this plug-in, especially adaptive / static area smoothing used to remove the so called "ringing" effect introduced by edges in the image and effects introduced by noise. Mirror and periodical boundary conditions are available. Preview helps you select the best parameters.
+There are a few nice features of this plug-in, especially adaptive/static area
+smoothing used to remove the so called "ringing" effect introduced by edges in
+the image and effects introduced by noise. Mirror and periodical boundary
+conditions are available. Preview helps you select the best parameters.
 
-There are a few NOT nice features of this plug-in as well, namely its memory and CPU requirements.
+There are a few NOT nice features of this plug-in as well, namely its memory
+and CPU requirements.
 
-The algorithm is based on finding the minimum of the error function using Hopfield neural network.
-
-## Documentation
-
-No doc is available yet.
+The algorithm is based on finding the minimum of the error function using the
+Hopfield Neural Network.
 
 ## Examples
 
-This is a snapshot of text document acquired by a defocused camera. The blur radius is about 6.5 (determined by a try / error method).
+This is a snapshot of text document acquired by a defocused camera. The blur
+radius is about 6.5 (determined by a try / error method).
 
 ![](img/defocus.jpg)
 
@@ -57,7 +61,7 @@ The second image was restored using these parameters:
 
 ![](img/restored3.jpg)
 
-Notice that the amplified noise has been partialy removed.
+Notice that the amplified noise has been partially removed.
 
 ## Restoration with area smoothing
 
@@ -76,7 +80,8 @@ The last snapshot shows result of restoration with parameters:
 
 ![](img/restored1.jpg)
 
-Notice the benefit of adaptive area smoothing. The noise has almost disapeared from the smooth areas.
+Notice the benefit of adaptive area smoothing. The noise has almost disapeared
+from the smooth areas.
 
 ## Installation method
 
@@ -132,4 +137,4 @@ This plug-in was written by Lukas Kunc in 2003..2004.
 
 Note: The Original Web page content, pictures, and files were located here https://refocus-it.sourceforge.net/ for versions 1.0.2 & 2.0.0
 
-Recent updates and patching by Joe da Silva in 2024..2025.
+Recent versions 2.1, 2.2 updates and patching by Joe da Silva in 2024..2025.

@@ -1,3 +1,5 @@
+  NOTE: This is now a GIMP3 binary, and needs more work for gimp-3.x
+
 2025-04-08 (2.2)  Joe Da Silva <digital@joescat.com>
 
   * Converted deprecated gimp-2.0 code to use gimp-2.10 API, which is
@@ -16,6 +18,8 @@
   * Removed more functions that were only used by command-line program.
   * No http docs exist, however, added summary Help pop-up info.
   * ./configure --enable-debug now correctly toggles define NDEBUG.
+
+  NOTE: This is still a GIMP2 binary, and builds okay on gimp-2.10
 
 2025-02-20 (2.1)  Joe Da Silva <digital@joescat.com>
 

@@ -1,115 +1,220 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the gimp-refocus-it package.
-# Joe Da Silva <digital@joescat.com>, 2025.
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# Lukas Kunc <Lukas.Kunc@seznam.cz>, 2004.
 #
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: refocus-it 2.1\n"
+"Project-Id-Version: refocus-it 2.2\n"
 "Report-Msgid-Bugs-To: https://github.com/JoesCat/gimp-refocus-it/issues\n"
-"POT-Creation-Date: 2025-02-19 21:50-0800\n"
-"PO-Revision-Date: 2025-02-20 20:12-0800\n"
-"Last-Translator: Joe Da Silva <digital@joescat.com>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: pt\n"
+"POT-Creation-Date: 2025-08-04 18:35-0700\n"
+"PO-Revision-Date: 2024-10-15 20:49-0700\n"
+"Last-Translator: Lukas Kunc <Lukas.Kunc@seznam.cz>\n"
+"Language-Team: Lukas Kunc <Lukas.Kunc@seznam.cz>\n"
+"Language: cs\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../gimp-plugin/main-gimp.c:374
-msgid "Iterative Refocus..."
-msgstr "Refocalização Iterativa..."
+#: ../gimp-plugin/main-gimp.c:404
+#, fuzzy
+msgid "_Radius"
+msgstr "Poloměr rozostření:"
 
-#: ../gimp-plugin/main-gimp.c:381
-msgid "Iterative refocus."
-msgstr "Refocalização iterativa."
+#: ../gimp-plugin/main-gimp.c:404
+msgid "Blur radius (default = 6.0)"
+msgstr ""
 
-#: ../gimp-plugin/main-gimp.c:382
-msgid "This plug-in iteratively refocuses a defocused image."
-msgstr "Este plug-in refocaliza iterativamente uma imagem desfocada."
+#: ../gimp-plugin/main-gimp.c:408
+#, fuzzy
+msgid "_Gauss"
+msgstr "Gaussovo rozostření:"
 
-#: ../gimp-plugin/main-gimp.c:489
+#: ../gimp-plugin/main-gimp.c:408
+msgid "Gaussian blur variance (default = 0.0)"
+msgstr ""
+
+#: ../gimp-plugin/main-gimp.c:412
+#, fuzzy
+msgid "Motion _Size"
+msgstr "Velikost pohybu:"
+
+#: ../gimp-plugin/main-gimp.c:412
+msgid "Motion size (default = 0.0)"
+msgstr ""
+
+#: ../gimp-plugin/main-gimp.c:416
+#, fuzzy
+msgid "Motion _Angle"
+msgstr "Úhel pohybu:"
+
+#: ../gimp-plugin/main-gimp.c:416
+msgid "Motion angle (default = 0.0)"
+msgstr ""
+
+#: ../gimp-plugin/main-gimp.c:420
+msgid "_Lambda Noise"
+msgstr ""
+
+#: ../gimp-plugin/main-gimp.c:420
+msgid "Noise reduction (default = 100.0)"
+msgstr ""
+
+#: ../gimp-plugin/main-gimp.c:424
+#, fuzzy
+msgid "_Boundary"
+msgstr "Okraje:"
+
+#: ../gimp-plugin/main-gimp.c:424
+msgid "Boundary conditions (default = mirror / 0)"
+msgstr ""
+
+#: ../gimp-plugin/main-gimp.c:428
+msgid "Lambda _Min"
+msgstr ""
+
+#: ../gimp-plugin/main-gimp.c:428
+msgid "Area smoothnes (default = 30.0)"
+msgstr ""
+
+#: ../gimp-plugin/main-gimp.c:432
+#, fuzzy
+msgid "Adaptive Smoothing"
+msgstr "Adaptivní vyhlazování:"
+
+#: ../gimp-plugin/main-gimp.c:432
+#, fuzzy
+msgid "Adaptive smoothing (default = TRUE)"
+msgstr "Adaptivní vyhlazování:"
+
+#: ../gimp-plugin/main-gimp.c:436
+msgid "_Window Size"
+msgstr ""
+
+#: ../gimp-plugin/main-gimp.c:437
+msgid "Smooth area size (default = 3)"
+msgstr ""
+
+#: ../gimp-plugin/main-gimp.c:440
+#, fuzzy
+msgid "_Iterations"
+msgstr "Počet iterací:"
+
+#: ../gimp-plugin/main-gimp.c:441
+msgid "Number of iterations (default = 100)"
+msgstr ""
+
+#: ../gimp-plugin/main-gimp.c:444
+#, fuzzy
+msgid "_Preview Iterations"
+msgstr "Počet iterací:"
+
+#: ../gimp-plugin/main-gimp.c:445
+msgid "Number of iterations for preview (default = 10)"
+msgstr ""
+
+#: ../gimp-plugin/main-gimp.c:546
 msgid "mirror boundary"
-msgstr "borda é espelhada"
+msgstr "zrcadlové okraje"
 
-#: ../gimp-plugin/main-gimp.c:490
+#: ../gimp-plugin/main-gimp.c:547
 msgid "periodical boundary"
-msgstr "borda é periódica"
+msgstr "periodické okraje"
 
-#: ../gimp-plugin/main-gimp.c:846
+#: ../gimp-plugin/main-gimp.c:905
 msgid "Degradation"
-msgstr "Degradação"
+msgstr "Degradace"
 
 #. blur radius
-#: ../gimp-plugin/main-gimp.c:851
+#: ../gimp-plugin/main-gimp.c:910
 msgid "Radius:"
-msgstr "Raio:"
+msgstr "Poloměr rozostření:"
 
 #. gaussian blur
-#: ../gimp-plugin/main-gimp.c:861
+#: ../gimp-plugin/main-gimp.c:919
 msgid "Gauss:"
-msgstr "Gauss:"
+msgstr "Gaussovo rozostření:"
 
 #. motion blur
-#: ../gimp-plugin/main-gimp.c:871
+#: ../gimp-plugin/main-gimp.c:928
 msgid "Motion size:"
-msgstr "Tamanho do movimento:"
+msgstr "Velikost pohybu:"
 
 #. motion angle
-#: ../gimp-plugin/main-gimp.c:881
+#: ../gimp-plugin/main-gimp.c:937
 msgid "Motion angle:"
-msgstr "Ângulo de movimento:"
+msgstr "Úhel pohybu:"
 
 #. noise reduction
-#: ../gimp-plugin/main-gimp.c:891
+#: ../gimp-plugin/main-gimp.c:946
 msgid "Noise:"
-msgstr "Ruído:"
+msgstr "Šum:"
 
 #. iterations
-#: ../gimp-plugin/main-gimp.c:901 ../gimp-plugin/main-gimp.c:1113
+#: ../gimp-plugin/main-gimp.c:955 ../gimp-plugin/main-gimp.c:1154
 msgid "Iterations:"
-msgstr "Iterações:"
+msgstr "Počet iterací:"
 
 #. boundary
-#: ../gimp-plugin/main-gimp.c:911
+#: ../gimp-plugin/main-gimp.c:964
 msgid "Boundary:"
-msgstr "Borda:"
+msgstr "Okraje:"
 
-#: ../gimp-plugin/main-gimp.c:935
+#: ../gimp-plugin/main-gimp.c:986
 msgid "Area smoothing"
-msgstr "Suavização de área"
+msgstr "Vyhlazováni oblastí"
 
-#: ../gimp-plugin/main-gimp.c:939
+#: ../gimp-plugin/main-gimp.c:990
 msgid "Smoothness:"
-msgstr "Suavidade:"
+msgstr "Hladkost"
 
-#: ../gimp-plugin/main-gimp.c:948
+#: ../gimp-plugin/main-gimp.c:998
 msgid "Area size:"
-msgstr "Tamanho da área:"
+msgstr "Velikost oblasti:"
 
-#: ../gimp-plugin/main-gimp.c:957
+#: ../gimp-plugin/main-gimp.c:1006
 msgid "Adaptive smoothing:"
-msgstr "Suavização adaptativa:"
+msgstr "Adaptivní vyhlazování:"
 
-#: ../gimp-plugin/main-gimp.c:1040
+#: ../gimp-plugin/main-gimp.c:1083
 msgid "Motion direction"
-msgstr "Direção do movimento"
+msgstr "Směr pohybu"
 
-#: ../gimp-plugin/main-gimp.c:1129 ../gimp-plugin/main-gimp.c:1147
+#: ../gimp-plugin/main-gimp.c:1169
 msgid "Preview"
-msgstr "Visualização"
+msgstr "Náhled"
 
-#: ../gimp-plugin/main-gimp.c:1142
+#: ../gimp-plugin/main-gimp.c:1182
 msgid "Iterative Refocus"
-msgstr "Refocalização iterativa"
+msgstr "Iterativní doostření"
 
-#: ../gimp-plugin/main-gimp.c:1210
+#: ../gimp-plugin/main-gimp.c:1186
+#, fuzzy
+msgid "_Preview"
+msgstr "Náhled"
+
+#: ../gimp-plugin/main-gimp.c:1187
+msgid "_Reset"
+msgstr ""
+
+#: ../gimp-plugin/main-gimp.c:1188
+msgid "_Cancel"
+msgstr ""
+
+#: ../gimp-plugin/main-gimp.c:1189
+msgid "_OK"
+msgstr ""
+
+#: ../gimp-plugin/main-gimp.c:1252
 msgid "Refocusing..."
-msgstr "Reorientando..."
+msgstr "Doostřuji..."
 
-#. INIT_I18N_UI();
-#: ../gimp-plugin/main-gimp.c:1459
+#: ../gimp-plugin/main-gimp.c:1559
 #, c-format
-msgid "Iterative Refocus - %s"
-msgstr "Refocalização iterativa - %s"
+msgid "Procedure '%s' only works with one drawable."
+msgstr ""
+
+#: ../gimp-plugin/main-gimp.c:1569
+#, c-format
+msgid "Procedure '%s' only works with RGB or GRAY images."
+msgstr ""

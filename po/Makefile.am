@@ -3,12 +3,12 @@ PO_FILES = cs.po pt.po
 
 # Information to help translators
 # To create a new pot file, you need to cd into this po directory first:
-#   cd po; del gimp20-fix-ca.pot; make update-pot
+#   cd po; del gimp30-refocus-it.pot; make update-pot
 #
 # To update existing po files you need to cd into po directory and then do:
 #   cd po; make update-po
 
-.PHONY: all install install-user uninstall uninstall-user clean $(LANGUAGES)
+.PHONY: all install uninstall clean $(LANGUAGES)
 .PHONY: update-po update-pot
 
 all: $(LANGUAGES)
@@ -41,17 +41,10 @@ uninstall-local: $(LANGUAGES)
 clean-local:
 	rm -f *.po~ *.mo *.mo~
 
-install-user:
-	$(warning Will not install gettext files for user installation!)
-
-uninstall-user:
-	$(warning Will not uninstall gettext files for user installation!)
-
-
 update-pot: $(GETTEXT_PACKAGE).pot
 
 $(GETTEXT_PACKAGE).pot:
-	$(XGETTEXT) -k_ -k_\( -kd_\( -c -d $(GETTEXT_PACKAGE) -o $@ \
+	$(XGETTEXT) -k_ -k_\" -kd_\( -c -d $(GETTEXT_PACKAGE) -o $@ \
 	--package-version=$(PLUGIN_VERSION) --msgid-bugs-address=$(PLUGIN_EMAIL) --package-name=$(PLUGIN_PACKAGE_NAME) \
 	$(top_srcdir)/gimp-plugin/*.c
 

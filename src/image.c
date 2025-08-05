@@ -40,7 +40,7 @@ void image_destroy(image_t* image) {
   free(image->data);
 }
 
-/* not needed
+/* not needed (but keep this for reference).
  * static void image_init(image_t* image) {
  *   image->data = NULL;
  * }

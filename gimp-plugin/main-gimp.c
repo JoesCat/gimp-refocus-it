@@ -31,7 +31,11 @@
 #include "image.h"
 #include "lambda.h"
 #include "blur.h"
-#include "gettext.h"
+#ifdef HAVE_GETTEXT
+//#include "gettext.h"
+#include <libintl.h>
+#include <locale.h>
+#endif
 
 #define _(String) gettext (String)
 #define gettext_noop(String) String
@@ -49,73 +53,24 @@
 #define RESPONSE_PREVIEW	1
 #define RESPONSE_RESET		2
 
+/* DATA STRUCTURES */
+
 enum {
   BOUNDARY_MIRROR = 0,
   BOUNDARY_PERIODICAL,
   BOUNDARY_LAST
 };
 
-/* FORWARD DECLARATIONS */
+typedef struct _RefocusIt RefocusIt;
+typedef struct _RefocusItClass RefocusItClass;
 
-static void query(void);
-static void run(const gchar     *name,
-                gint             nparams,
-                const GimpParam *param,
-                gint            *nreturn_vals,
-                GimpParam      **returm_vals);
-static void refocusit_help (const gchar *help_id,
-                            gpointer help_data);
-
-static void dialog_parameters_create();
-static void dialog_parameters_init();
-static void dialog_elements_update();
-static void dialog_elements_destroy (void);
-static void dialog_response(GtkWidget *widget, gint response_id, gpointer data);
-
-static void input_parameters_init (void);
-static void input_parameters_destroy (void);
-static void input_parameters_load (void);
-static void input_parameters_save (void);
-static void input_parameters_fetch_params (const GimpParam *param);
-static void input_parameters_fetch_dlg();
-static int  image_parameters_init (const GimpParam *param, GimpParam *values);
-static void image_parameters_destroy (void);
-static int  hopfield_data_init (void);
-static void hopfield_data_destroy (void);
-static void hopfield_data_load (void);
-static void hopfield_data_save (void);
-static void preview_parameters_init (void);
-static void preview_fetch_hopfield (void);
-static void preview_update (void);
-static void get_lambdas (gdouble *lambda, gdouble *lambda_min);
-static int compute (int iterations);
-static void motion_angle_draw (gboolean complete_redraw);
-static void motion_angle_xy_calculate (gdouble x, gdouble y);
-
-/* CONSTANTS */
-
-static const char PLUG_IN_PROC[] =
-  "plug-in-" PLUGIN_NAME;
-static const char PLUG_IN_MENU_LOCATION[] = "<Image>/Filters/Enhance";
-static const char PLUG_IN_MENU_LABEL[] = d_("Iterative Refocus...");
-static const char PLUG_IN_SHORT_DESC[] = d_(
-  "This plug-in iteratively refocuses a defocused image.");
-static const char PLUG_IN_LONG_DESC[] = d_(
-  "The Iterative Refocus plug-in can sharpen images acquired by a defocused camera "
-  "blurred with gaussian or motion blur or any combination of these degradations.\n\n"
-  "Nice features are adaptive/static area smoothing to remove 'ringing' effect "
-  "introduced by image edges and noise.\n\n"
-  "NOT nice features of this plug-in are memory and CPU requirements.\n\n"
-  "Iterative Refocus uses Hopfield Neural Network algorithm to find minimum error.");
-
-const GimpPlugInInfo PLUG_IN_INFO = {
-  NULL,  /* init_proc  */
-  NULL,  /* quit_proc  */
-  query, /* query_proc */
-  run    /* run_proc   */
+struct _RefocusIt {
+  GimpPlugIn parent_instance;
 };
 
-/* DATA STRUCTURES */
+struct _RefocusItClass {
+  GimpPlugInClass parent_class;
+};
 
 typedef struct {
   char          *name;
@@ -153,10 +108,6 @@ typedef struct {
 typedef struct {
   guint          sel_width;
   guint          sel_height;
-  gint           sel_x1;
-  gint           sel_y1;
-  gint           sel_x2;
-  gint           sel_y2;
   gint           img_bpp;
   guint          size;
   gboolean       gray;
@@ -215,13 +166,104 @@ typedef struct {
 
 /* STATIC DATA */
 
-static SDialogElements   dialog_elements;
-static SDialogParameters dialog_parameters;
-static SInputParameters  input_parameters;
-static SImageParameters  image_parameters;
-static SPreview          preview;
-static SHopfield         hopfield;
-static SListbox          boundary_listbox[BOUNDARY_LAST + 1];
+static SDialogElements    dialog_elements;
+static SDialogParameters  dialog_parameters;
+static SInputParameters   input_parameters;
+static SImageParameters   image_parameters;
+static SPreview           preview;
+static SHopfield          hopfield;
+static SListbox           boundary_listbox[BOUNDARY_LAST + 1];
+
+/* Declare local functions. */
+#define REFOCUSIT_TYPE  (refocusit_get_type())
+#define REFOCUSIT (obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), REFOCUSIT_TYPE, RefocusIt))
+
+/* CONSTANTS */
+
+static const char PLUG_IN_PROC[] = "plug-in-" PLUGIN_NAME;
+//static const char PLUG_IN_ROLE[] = "gimp-" PLUGIN_NAME;
+static const char PLUG_IN_BINARY[] =  PLUGIN_NAME;
+static const char PLUG_IN_MENU_LOCATION[] = "<Image>/Filters/Enhance";
+static const char PLUG_IN_MENU_LABEL[] = d_("Iterative Refocus...");
+static const char PLUG_IN_SHORT_DESC[] = d_(
+  "This plug-in iteratively refocuses a defocused image.");
+static const char PLUG_IN_LONG_DESC[] = d_(
+  "Refocus-it can refocus images acquired by a defocused camera "
+  "blurred by gaussian or motion blur or combination of these.\n\n"
+  "Nice features include adaptive/static area smoothing to reduce "
+  "'ringing' introduced by image edges and effects introduced by "
+  "noise. Mirror and periodical boundary conditions are available. "
+  "Preview helps you select the best parameters.\n\n"
+  "NOT nice features are memory and CPU requirements.\n\n"
+  "Refocus-it is based on finding the minimum error using the "
+  "Hopfield neural network.");
+
+/* FORWARD DECLARATIONS */
+
+GType                   refocusit_get_type         (void) G_GNUC_CONST;
+
+static GList          * refocusit_query_procedures (GimpPlugIn          *plug_in);
+static GimpProcedure  * refocusit_create_procedure (GimpPlugIn          *plug_in,
+                                                    const gchar         *name);
+
+static GimpValueArray * refocusit_run              (GimpProcedure       *procedure,
+                                                    GimpRunMode          run_mode,
+                                                    GimpImage           *image,
+                                                    GimpDrawable       **drawables,
+                                                    GimpProcedureConfig *proc_config,
+                                                    gpointer             run_data);
+
+static void             refocusit_help             (const gchar         *help_id,
+                                                    gpointer             help_data);
+
+static void dialog_parameters_create ();
+static void dialog_parameters_init ();
+static void dialog_elements_update ();
+static void dialog_elements_destroy ();
+static void dialog_response(GtkWidget *widget, gint response_id, gpointer data);
+
+static void input_parameters_init ();
+static void input_parameters_destroy ();
+//static void input_parameters_load ();
+static void input_parameters_save ();
+static void input_parameters_fetch_params (GimpProcedureConfig *proc_config);
+static void input_parameters_fetch_dlg();
+static int  image_parameters_init (GimpDrawable *drawable);
+static void image_parameters_destroy ();
+static int  hopfield_data_init ();
+static void hopfield_data_destroy ();
+static void hopfield_data_load ();
+static void hopfield_data_save ();
+static void preview_parameters_init ();
+static void preview_fetch_hopfield ();
+static void preview_update ();
+static void get_lambdas (gdouble *lambda, gdouble *lambda_min);
+static int compute (int iterations);
+static void motion_angle_draw (gboolean complete_redraw);
+static void motion_angle_xy_calculate (gdouble x, gdouble y);
+
+G_DEFINE_TYPE (RefocusIt, refocusit, GIMP_TYPE_PLUG_IN)
+
+GIMP_MAIN (REFOCUSIT_TYPE)
+//DEFINE_STD_SET_I18N; ***don't use, need 3rd-party locale external to gimp3
+
+static void
+refocusit_class_init (RefocusItClass *klass) {
+  GimpPlugInClass *plug_in_class  = GIMP_PLUG_IN_CLASS (klass);
+
+  plug_in_class->query_procedures = refocusit_query_procedures;
+  plug_in_class->create_procedure = refocusit_create_procedure;
+  //plug_in_class->set_i18n       = STD_SET_I18N;
+}
+
+static void
+refocusit_init (RefocusIt *refocusit) {
+}
+
+static GList *
+refocusit_query_procedures (GimpPlugIn *plug_in) {
+  return g_list_append (NULL, g_strdup (PLUG_IN_PROC));
+}
 
 /* CALLBACKS */
 
@@ -271,6 +313,7 @@ static gboolean motion_vector_mouse_press_callback (GtkWidget *widget, GdkEvent 
 }
 
 static void boundary_callback (GtkWidget *menu_item, guint index) {
+//static void boundary_callback (GtkWidget* menu_item, gpointer *index) {
   input_parameters.boundary = (guchar)index;
 }
 
@@ -316,54 +359,100 @@ static void preview_scroll_callback (GtkWidget *widget, gpointer data) {
 
 /* FUNCTIONS */
 
-MAIN ()
+static GimpProcedure *
+refocusit_create_procedure (GimpPlugIn *plug_in,
+                        const gchar *name)
+{
+  GimpProcedure *procedure = NULL;
 
-static void query (void) {
-  static GimpParamDef args[] = {
-    {GIMP_PDB_INT32, "run_mode", "Interactive, non-interactive"},
-    {GIMP_PDB_IMAGE, "image", "Input image"},
-    {GIMP_PDB_DRAWABLE, "drawable", "Input drawable to modify"},
-    {GIMP_PDB_FLOAT, "radius", "Blur radius (default = 6.0)"},
-    {GIMP_PDB_FLOAT, "gauss", "Gaussian blur variance (default = 0.0)"},
-    {GIMP_PDB_FLOAT, "motion", "Motion size (default = 0.0)"},
-    {GIMP_PDB_FLOAT, "mot_angle", "Motion angle (default = 0.0)"},
-    {GIMP_PDB_FLOAT, "lambda", "Noise reduction (default = 100.0)"},
-    {GIMP_PDB_INT32, "boundary", "Boundary conditions (default = mirror / 0)"},
-    {GIMP_PDB_FLOAT, "lambda_min", "Area smoothnes (default = 30.0)"},
-    {GIMP_PDB_INT32, "adaptive_smooth", "Adaptive smoothing (default = TRUE)"},
-    {GIMP_PDB_INT32, "winsize", "Smooth area size (default = 3)"},
-    {GIMP_PDB_INT32, "iterations", "Number of iterations (default = 100)"},
-    {GIMP_PDB_INT32, "prev_iter", "Number of iterations for preview (default = 10)"}
-  };
+  if (!strcmp (name, PLUG_IN_PROC)) {
 
-#ifdef HAVE_SETLOCALE
-  setlocale (LC_ALL, "");
-#endif
-#ifdef ENABLE_NLS
-  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+    procedure = gimp_image_procedure_new (plug_in, name,
+                                          GIMP_PDB_PROC_TYPE_PLUGIN,
+                                          refocusit_run, NULL, NULL);
+
+    gimp_procedure_set_image_types (procedure, "RGB*,GRAY*");
+    gimp_procedure_set_sensitivity_mask (procedure,
+                                         GIMP_PROCEDURE_SENSITIVE_DRAWABLE);
+#ifdef HAVE_GETTEXT
+    /* Initialize i18n support */
+    setlocale (LC_ALL, "");
+    bindtextdomain (GETTEXT_PACKAGE, gimp_locale_directory ());
 #ifdef HAVE_BIND_TEXTDOMAIN_CODESET
-  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+    bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif
-  textdomain (GETTEXT_PACKAGE);
+    textdomain (GETTEXT_PACKAGE);
 #endif
 
-  gimp_install_procedure (PLUG_IN_PROC, _(PLUG_IN_SHORT_DESC), _(PLUG_IN_LONG_DESC),
-  /* copyright author  */ "Lukas Kunc, 2004, <Lukas.Kunc@seznam.cz>",
-  /* copyright license */ "GPL3+",
-  /* build date        */ "2025",
-  /* menu entry        */ PLUG_IN_MENU_LABEL,
-                          "RGB*, GRAY*",
-                          GIMP_PLUGIN,
-                          G_N_ELEMENTS (args), 0,
-                          args, 0);
-  gimp_plugin_domain_register (GETTEXT_PACKAGE, LOCALEDIR);
-  gimp_plugin_menu_register (PLUG_IN_PROC, PLUG_IN_MENU_LOCATION);
+/************************ copied from gimp2.10
+ * gimp_plugin_domain_register (GETTEXT_PACKAGE, LOCALEDIR);
+ * gimp_plugin_menu_register (PROCEDURE_NAME, "<Image>/Filters/Enhance");
+ */
+
+    gimp_procedure_set_menu_label (procedure, _(PLUG_IN_MENU_LABEL));
+    gimp_procedure_add_menu_path (procedure, PLUG_IN_MENU_LOCATION);
+    gimp_procedure_set_documentation (procedure,
+    /* menu entry tooltip blurb   */  _(PLUG_IN_SHORT_DESC),
+    /* help for script developers */  _(PLUG_IN_LONG_DESC),
+    /* help ID                    */  PLUG_IN_PROC);
+    gimp_procedure_set_attribution (procedure,
+    /* author(s) original, GIMP3 */ "Lukas Kunc (2003), Jose Da Silva (2025)",
+    /* copyright license         */ "GPL3+",
+    /* date for the latest build */ "2025");
+
+    gimp_procedure_add_double_argument (procedure, "radius",
+                                        _("_Radius"), _("Blur radius (default = 6.0)"),
+                                        0.0, 32.0, 6.0,
+                                        G_PARAM_READWRITE);
+    gimp_procedure_add_double_argument (procedure, "gauss",
+                                        _("_Gauss"), _("Gaussian blur variance (default = 0.0)"),
+                                        0, 32.0, 0.0,
+                                        G_PARAM_READWRITE);
+    gimp_procedure_add_double_argument (procedure, "motion",
+                                        _("Motion _Size"), _("Motion size (default = 0.0)"),
+                                        0.0, 32.0, 0.0,
+                                        G_PARAM_READWRITE);
+    gimp_procedure_add_double_argument (procedure, "mot_angle",
+                                        _("Motion _Angle"), _("Motion angle (default = 0.0)"),
+                                        0.0, 359.9, 0.0,
+                                        G_PARAM_READWRITE);
+    gimp_procedure_add_double_argument (procedure, "lambda",
+                                        _("_Lambda Noise"), _("Noise reduction (default = 100.0)"),
+                                        0.0, (gdouble)(LAMBDA_MAX), 100.0,
+                                        G_PARAM_READWRITE);
+    gimp_procedure_add_int_argument (procedure, "boundary",
+                                     _("_Boundary"), _("Boundary conditions (default = mirror / 0)"),
+                                     0, 2, 0,
+                                     G_PARAM_READWRITE);
+    gimp_procedure_add_double_argument (procedure, "lambda_min",
+                                        _("Lambda _Min"), _("Area smoothnes (default = 30.0)"),
+                                        0.0, (gdouble)(LAMBDAMIN_MAX), 30.0,
+                                        G_PARAM_READWRITE);
+    gimp_procedure_add_int_argument (procedure, "adaptive_smooth",
+                                     _("Adaptive Smoothing"), _("Adaptive smoothing (default = TRUE)"),
+                                     0, 1, 1,
+                                     G_PARAM_READWRITE);
+    gimp_procedure_add_int_argument (procedure, "winsize",
+                                     _("_Window Size"),
+                                     _("Smooth area size (default = 3)"),
+                                     1, 16, 1, G_PARAM_READWRITE);
+    gimp_procedure_add_int_argument (procedure, "iterations",
+                                     _("_Iterations"),
+                                     _("Number of iterations (default = 100)"),
+                                     1, 200, 100, G_PARAM_READWRITE);
+    gimp_procedure_add_int_argument (procedure, "prev_iter",
+                                     _("_Preview Iterations"),
+                                     _("Number of iterations for preview (default = 10)"),
+                                     1, 20, 10, G_PARAM_READWRITE);
+  }
+
+  return procedure;
 }
 
-static void input_parameters_destroy (void) {
+static void input_parameters_destroy () {
 }
 
-static void input_parameters_init (void) {
+static void input_parameters_init () {
   input_parameters.radius = 6.0;
   input_parameters.gauss = 0.0;
   input_parameters.motion = 0.0;
@@ -377,39 +466,46 @@ static void input_parameters_init (void) {
   input_parameters.adaptive_smooth = TRUE;
 }
 
-static void input_parameters_load (void) {
-  gimp_get_data (PACKAGE_NAME, &input_parameters);
+//static void input_parameters_load () {
+//  //gimp_get_data (PACKAGE_NAME, &input_parameters);
+//  gimp_procedural_db_get_data (PACKAGE_NAME, &input_parameters);
+//}
+
+static void input_parameters_save () {
+  gimp_procedural_db_set_data (PACKAGE_NAME, &input_parameters, sizeof (input_parameters));
 }
 
-static void input_parameters_save (void) {
-  gimp_set_data (PACKAGE_NAME, &input_parameters, sizeof (input_parameters));
-}
-
-static void input_parameters_fetch_params (const GimpParam *param) {
-  input_parameters.radius          = param[3].data.d_float;
-  input_parameters.gauss           = param[4].data.d_float;
-  input_parameters.motion          = param[5].data.d_float;
-  input_parameters.mot_angle       = param[6].data.d_float;
-  input_parameters.lambda          = param[7].data.d_float;
-  input_parameters.boundary        = param[8].data.d_int32;
-  input_parameters.lambda_min      = param[9].data.d_float;
-  input_parameters.adaptive_smooth = param[10].data.d_int32;
-  input_parameters.winsize         = param[11].data.d_int32;
-  input_parameters.iterations      = param[12].data.d_int32;
-  input_parameters.prev_iter       = param[13].data.d_int32;
+static void input_parameters_fetch_params (GimpProcedureConfig *proc_config) {
+  if (proc_config) {
+    g_object_get (proc_config,
+                  "radius",          &input_parameters.radius,
+                  "gauss",           &input_parameters.gauss,
+                  "motion",          &input_parameters.motion,
+                  "mot_angle",       &input_parameters.mot_angle,
+                  "lambda",          &input_parameters.lambda,
+    /* int */     "boundary",        &input_parameters.boundary,
+                  "lambda_min",      &input_parameters.lambda_min,
+    /* int */     "adaptive_smooth", &input_parameters.adaptive_smooth,
+    /* int */     "winsize",         &input_parameters.winsize,
+    /* int */     "iterations",      &input_parameters.iterations,
+    /* int */     "prev_iter",       &input_parameters.prev_iter,
+                  NULL);
+  } else {
+    input_parameters_init ();
+  }
 }
 
 static void input_parameters_fetch_dlg () {
-  input_parameters.radius          = gtk_adjustment_get_value (dialog_parameters.radius);
-  input_parameters.gauss           = gtk_adjustment_get_value (dialog_parameters.gauss);
-  input_parameters.motion          = gtk_adjustment_get_value (dialog_parameters.motion);
-  input_parameters.mot_angle       = gtk_adjustment_get_value (dialog_parameters.mot_angle);
-  input_parameters.lambda          = gtk_adjustment_get_value (dialog_parameters.lambda);
+  input_parameters.radius     = gtk_adjustment_get_value (dialog_parameters.radius);
+  input_parameters.gauss      = gtk_adjustment_get_value (dialog_parameters.gauss);
+  input_parameters.motion     = gtk_adjustment_get_value (dialog_parameters.motion);
+  input_parameters.mot_angle  = gtk_adjustment_get_value (dialog_parameters.mot_angle);
+  input_parameters.lambda     = gtk_adjustment_get_value (dialog_parameters.lambda);
   /* no action for boundary - updated automatically */
-  input_parameters.lambda_min      = gtk_adjustment_get_value (dialog_parameters.lambda_min);
-  input_parameters.winsize         = (guint)(gtk_adjustment_get_value (dialog_parameters.winsize));
-  input_parameters.iterations      = (guint)(gtk_adjustment_get_value (dialog_parameters.iterations));
-  input_parameters.prev_iter       = (guint)(gtk_adjustment_get_value (dialog_parameters.prev_iter));
+  input_parameters.lambda_min = gtk_adjustment_get_value (dialog_parameters.lambda_min);
+  input_parameters.winsize    = (guint)(gtk_adjustment_get_value (dialog_parameters.winsize));
+  input_parameters.iterations = (guint)(gtk_adjustment_get_value (dialog_parameters.iterations));
+  input_parameters.prev_iter  = (guint)(gtk_adjustment_get_value (dialog_parameters.prev_iter));
   input_parameters.adaptive_smooth = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (dialog_elements.adaptive));
 }
 
@@ -430,17 +526,17 @@ static void dialog_parameters_create () {
   dialog_parameters.frun = FALSE;
   dialog_parameters.finish = FALSE;
 
-  dialog_parameters.radius     = GTK_ADJUSTMENT (gtk_adjustment_new (input_parameters.radius, 0.0, 32.0, 0.01, 0.1, 0.0));
-  dialog_parameters.gauss      = GTK_ADJUSTMENT (gtk_adjustment_new (input_parameters.gauss, 0.0, 32.0, 0.01, 0.1, 0.0));
-  dialog_parameters.motion     = GTK_ADJUSTMENT (gtk_adjustment_new (input_parameters.motion, 0.0, 32.0, 0.01, 0.1, 0.0));
-  dialog_parameters.mot_angle  = GTK_ADJUSTMENT (gtk_adjustment_new (input_parameters.motion, 0.0, 360.0, 0.01, 0.1, 0.0));
-  dialog_parameters.lambda     = GTK_ADJUSTMENT (gtk_adjustment_new (input_parameters.lambda, 0.0, LAMBDA_MAX, 0.1, 1.0, 0.0));
-  dialog_parameters.lambda_min = GTK_ADJUSTMENT (gtk_adjustment_new (input_parameters.lambda_min, 0.0, LAMBDAMIN_MAX, 0.1, 1.0, 0.0));
-  dialog_parameters.winsize    = GTK_ADJUSTMENT (gtk_adjustment_new (input_parameters.winsize, 1.0, 16.0, 1.0, 1.0, 0.0));
-  dialog_parameters.iterations = GTK_ADJUSTMENT (gtk_adjustment_new (input_parameters.iterations, 1.0, 200.0, 1.0, 10.0, 0.0));
-  dialog_parameters.prev_iter  = GTK_ADJUSTMENT (gtk_adjustment_new (input_parameters.prev_iter, 1.0, 20.0, 1.0, 1.0, 0.0));
-  dialog_parameters.hscroll    = GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.0, image_parameters.sel_width - 1.0, 1.0, preview.width, preview.width));
-  dialog_parameters.vscroll    = GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.0, image_parameters.sel_height - 1.0, 1.0, preview.height, preview.height));
+  dialog_parameters.radius     = GTK_ADJUSTMENT (gtk_adjustment_new (input_parameters.radius, 0.0, 32.0, 0.01, 1.0, 0.0));
+  dialog_parameters.gauss      = GTK_ADJUSTMENT (gtk_adjustment_new (input_parameters.gauss, 0.0, 32.0, 0.01, 1.0, 0.0));
+  dialog_parameters.motion     = GTK_ADJUSTMENT (gtk_adjustment_new (input_parameters.motion, 0.0, 32.0, 0.01, 1.0, 0.0));
+  dialog_parameters.mot_angle  = GTK_ADJUSTMENT (gtk_adjustment_new (input_parameters.motion, 0.0, 360.0, 0.01, 1.0, 0.0));
+  dialog_parameters.lambda     = GTK_ADJUSTMENT (gtk_adjustment_new (input_parameters.lambda, 0.0, (gdouble)LAMBDA_MAX, 0.1, 1.0, 0.0));
+  dialog_parameters.lambda_min = GTK_ADJUSTMENT (gtk_adjustment_new (input_parameters.lambda_min, 0.0, (gdouble)LAMBDAMIN_MAX, 0.1, 1.0, 0.0));
+  dialog_parameters.winsize    = GTK_ADJUSTMENT (gtk_adjustment_new ((gdouble)(input_parameters.winsize), 1.0, 16.0, 1.0, 2.0, 0.0));
+  dialog_parameters.iterations = GTK_ADJUSTMENT (gtk_adjustment_new ((gdouble)(input_parameters.iterations), 1.0, 200.0, 1.0, 10.0, 0.0));
+  dialog_parameters.prev_iter  = GTK_ADJUSTMENT (gtk_adjustment_new ((gdouble)(input_parameters.prev_iter), 1.0, 20.0, 1.0, 1.0, 0.0));
+  dialog_parameters.hscroll    = GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.0, (gdouble)(image_parameters.sel_width) - 1.0, 1.0, (gdouble)(preview.width), (gdouble)(preview.width)));
+  dialog_parameters.vscroll    = GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.0, (gdouble)(image_parameters.sel_height) - 1.0, 1.0, (gdouble)(preview.height), (gdouble)(preview.height)));
 
   g_signal_connect (G_OBJECT (dialog_parameters.mot_angle), "value_changed", G_CALLBACK (motion_vector_change_callback), NULL);
   g_signal_connect (G_OBJECT (dialog_parameters.lambda), "value_changed", G_CALLBACK (no_smooth_callback), NULL);
@@ -463,13 +559,20 @@ static void dialog_elements_update () {
 }
 
 static void dialog_elements_destroy () {
+  destroy (dialog_elements.progress);
+  destroy (dialog_elements.adaptive);
+  destroy (dialog_elements.area_smooth);
+  destroy (dialog_elements.boundary);
+  destroy (dialog_elements.dialog);
   dialog_elements.progress    = NULL;
   dialog_elements.adaptive    = NULL;
   dialog_elements.area_smooth = NULL;
   dialog_elements.boundary    = NULL;
   dialog_elements.dialog      = NULL;
-}
 
+  g_free (boundary_listbox[BOUNDARY_MIRROR].name);
+  g_free (boundary_listbox[BOUNDARY_PERIODICAL].name);
+}
 
 static void dialog_response (GtkWidget *widget, gint response_id, gpointer data) {
   switch (response_id) {
@@ -489,25 +592,17 @@ static void dialog_response (GtkWidget *widget, gint response_id, gpointer data)
   }
 }
 
-static int image_parameters_init (const GimpParam *param, GimpParam *values) {
-  image_parameters.drawable   = gimp_drawable_get (param[2].data.d_drawable);
-  image_parameters.rgb        = gimp_drawable_is_rgb (image_parameters.drawable->drawable_id);
-  image_parameters.gray       = gimp_drawable_is_gray (image_parameters.drawable->drawable_id);
-  if (!(image_parameters.rgb || image_parameters.gray)) {
-#if defined(NDEBUG)
-    printf("Error, image_parameters_init() - image is not rgb or gray!\n");
-#endif
-    values[0].data.d_status = GIMP_PDB_EXECUTION_ERROR;
+static int image_parameters_init (GimpDrawable *drawable) {
+  image_parameters.drawable   = drawable;
+  image_parameters.format     = gimp_drawable_get_format (drawable);
+  image_parameters.rgb        = gimp_drawable_is_rgb (drawable);
+  image_parameters.gray       = gimp_drawable_is_gray (drawable);
+  if (!(image_parameters.rgb || image_parameters.gray))
     return -1;
-  }
 
-  gimp_drawable_mask_bounds (image_parameters.drawable->drawable_id,
-                             &image_parameters.sel_x1, &image_parameters.sel_y1,
-                             &image_parameters.sel_x2, &image_parameters.sel_y2);
-
-  image_parameters.sel_width  = image_parameters.sel_x2 - image_parameters.sel_x1;
-  image_parameters.sel_height = image_parameters.sel_y2 - image_parameters.sel_y1;
-  image_parameters.img_bpp    = gimp_drawable_bpp (image_parameters.drawable->drawable_id);
+  image_parameters.sel_width  = gimp_drawable_get_width (drawable);
+  image_parameters.sel_height = gimp_drawable_get_height (drawable);
+  image_parameters.img_bpp    = gimp_drawable_get_bpp (drawable);
   image_parameters.size       = image_parameters.sel_width * image_parameters.sel_height;
 
   preview.data = NULL;
@@ -515,17 +610,17 @@ static int image_parameters_init (const GimpParam *param, GimpParam *values) {
   return 0;
 }
 
-static void image_parameters_destroy (void) {
+static void image_parameters_destroy () {
   gimp_drawable_detach (image_parameters.drawable);
   if (preview.data)   g_free(preview.data);
   if (preview.linear) g_free(preview.linear);
 }
 
-static void preview_parameters_init (void) {
+static void preview_parameters_init () {
   const char *str, *ret;
 
 #if defined(NDEBUG)
-    printf("preview_parameters_init() - starting!\n");
+    printf ("preview_parameters_init() - starting!\n");
 #endif
   /* select and RGB version of existing format */
   str = babl_get_name (image_parameters.format);
@@ -540,7 +635,7 @@ static void preview_parameters_init (void) {
   else //if (strstr(str, "RGB") || strstr(str, "YA ") || strstr(str, "Y "))
     ret = "RGB u8";
 #if defined(NDEBUG)
-    printf("preview_parameters_init() - found <%s> and will output <%s>\n", str, ret);
+    printf ("preview_parameters_init() - found <%s> and will output <%s>\n", str, ret);
 #endif
   //g_free (str);
 
@@ -553,26 +648,23 @@ static void preview_parameters_init (void) {
   preview.linear = g_new (gdouble, preview.size * (image_parameters.rgb ? 3:1));
 }
 
-static int hopfield_data_init (void) {
-  gint32      drawable_ID;
-  gint        xImg, yImg, pixelCount, bppImg;
+static int hopfield_data_init () {
+  gint xImg, yImg, pixelCount, bppImg;
 
   gegl_init (NULL, NULL);
 
-  drawable_ID = image_parameters.drawable->drawable_id;
-  image_parameters.format = gimp_drawable_get_format (drawable_ID);
-  image_parameters.bppImg = bppImg = babl_format_get_bytes_per_pixel (image_parameters.format);
+  image_parameters.bppImg = bppImg = gimp_drawable_get_bpp (image_parameters.drawable);
 
   /* Load 'linear_double RGB' or 'linear_double Gray' into srcImg */
-  image_parameters.xImg = xImg = gimp_drawable_width(drawable_ID);
-  image_parameters.yImg = yImg = gimp_drawable_height(drawable_ID);
+  image_parameters.xImg = xImg = gimp_drawable_get_width (image_parameters.drawable);
+  image_parameters.yImg = yImg = gimp_drawable_get_height (image_parameters.drawable);
   pixelCount = xImg * yImg;
   if (!(image_parameters.srcImg = g_new (gdouble, pixelCount * (image_parameters.rgb ? 3:1))))
     goto hopfield_data_init_err0;
   if (!(image_parameters.destImg = g_new (guchar, pixelCount * bppImg)))
     goto hopfield_data_init_err1;
 
-  if (!(image_parameters.srcBuf = gimp_drawable_get_buffer (drawable_ID))) {
+  if (!(image_parameters.srcBuf = gimp_drawable_get_buffer (image_parameters.drawable))) {
     goto hopfield_data_init_err2;
   }
   gegl_buffer_get (image_parameters.srcBuf, GEGL_RECTANGLE(0, 0, xImg, yImg), 1.0, \
@@ -583,12 +675,12 @@ static int hopfield_data_init (void) {
                 image_parameters.destImg, image_parameters.srcImg, \
                 pixelCount);
 #if defined(NDEBUG)
-  printf("hopfield_data_init()\nDrawable image format <%s>, bytes per pixel=%d, xImg=%d yImg=%d\n",
+  printf ("hopfield_data_init()\nDrawable image format <%s>, bytes per pixel=%d, xImg=%d yImg=%d\n",
          babl_get_name (image_parameters.format), image_parameters.bppImg, xImg, yImg);
   for (int i = 0; i <40; i++) {
-    printf("|%d-%d-%f",i,image_parameters.destImg[i],image_parameters.srcImg[i]);
+    printf ("|%d-%d-%f",i,image_parameters.destImg[i],image_parameters.srcImg[i]);
   }
-  printf("\nBuffer srcImg format <%s>\n", babl_get_name (image_parameters.linear));
+  printf ("\nBuffer srcImg format <%s>\n", babl_get_name (image_parameters.linear));
 #endif
   g_object_unref (image_parameters.srcBuf);
 
@@ -616,12 +708,12 @@ hopfield_data_init_err1:
 hopfield_data_init_err0:
   gegl_exit ();
 #if defined(NDEBUG)
-  printf("Error, hopfield_data_init() - out of memory!\n");
+  printf ("Error, hopfield_data_init() - out of memory!\n");
 #endif
   return -1;
 }
 
-static void hopfield_data_destroy (void) {
+static void hopfield_data_destroy () {
   if (image_parameters.rgb) {
     image_destroy (&hopfield.imageB);
     image_destroy (&hopfield.imageG);
@@ -632,12 +724,10 @@ static void hopfield_data_destroy (void) {
   g_free (image_parameters.srcImg);
 }
 
-static void hopfield_data_save (void) {
-  gint32   drawable_ID;
+static void hopfield_data_save () {
   gdouble *ptr;
   gint     x, y, xImg, yImg;
 
-  drawable_ID = image_parameters.drawable->drawable_id;
   xImg = image_parameters.xImg;
   yImg = image_parameters.yImg;
 
@@ -662,37 +752,37 @@ static void hopfield_data_save (void) {
                 image_parameters.srcImg, image_parameters.destImg, \
                 (xImg * yImg));
 #if defined(NDEBUG)
-  printf("hopfield_data_save() - converted srcImg back to drawable format!\n");
-  printf("Drawable image format <%s>, bytes per pixel=%d, xImg=%d yImg=%d\n",
+  printf ("hopfield_data_save() - converted srcImg back to drawable format!\n");
+  printf ("Drawable image format <%s>, bytes per pixel=%d, xImg=%d yImg=%d\n",
          babl_get_name (image_parameters.format), image_parameters.bppImg, xImg, yImg);
   for (int i = 0; i <40; i++) {
-    printf("|%d-%f-%d",i,image_parameters.srcImg[i],image_parameters.destImg[i]);
+    printf ("|%d-%f-%d",i,image_parameters.srcImg[i],image_parameters.destImg[i]);
   }
-  printf("\nBuffer srcImg format <%s>\n", babl_get_name (image_parameters.linear));
+  printf ("\nBuffer srcImg format <%s>\n", babl_get_name (image_parameters.linear));
 #endif
 
   /* merge the shadow, update the drawable */
-  if (!(image_parameters.destBuf = gimp_drawable_get_shadow_buffer (drawable_ID)))
+  if (!(image_parameters.destBuf = gimp_drawable_get_shadow_buffer (image_parameters.drawable)))
     goto hopfield_data_save_err0;
   gegl_buffer_set (image_parameters.destBuf, GEGL_RECTANGLE(0, 0, xImg, yImg), 0, \
                    image_parameters.format, image_parameters.destImg, GEGL_AUTO_ROWSTRIDE);
-  g_object_unref (image_parameters.destBuf);
-  gimp_drawable_merge_shadow (drawable_ID, TRUE);
+    gegl_buffer_flush (image_parameters.destBuf);
+    gimp_drawable_merge_shadow (image_parameters.drawable, TRUE);
 #if defined(NDEBUG)
-  printf("hopfield_data_save() - shadow merged!\n");
+  printf ("hopfield_data_save() - shadow merged!\n");
 #endif
-  gimp_drawable_update (drawable_ID, 0, 0, xImg, yImg);
+  gimp_drawable_update (image_parameters.drawable, 0, 0, xImg, yImg);
+  g_object_unref (image_parameters.destBuf);
   return;
 
 hopfield_data_save_err0:
 #if defined(NDEBUG)
-  printf("Error, hopfield_data_save() - out of memory!\n");
+  printf ("Error, hopfield_data_save() - out of memory!\n");
 #endif
   return;
-
 }
 
-static void hopfield_data_load (void) {
+static void hopfield_data_load () {
   guint    x, y;
   gdouble *ptr;
 
@@ -718,7 +808,7 @@ static void hopfield_data_load (void) {
   }
 }
 
-static void preview_fetch_hopfield (void) {
+static void preview_fetch_hopfield () {
   guint    x, y;
   guint    w, h;
   gdouble *ptr;
@@ -746,7 +836,7 @@ static void preview_fetch_hopfield (void) {
                 preview.linear, preview.data, preview.size);
 }
 
-static void preview_update (void) {
+static void preview_update () {
   guint   y;
   guchar *image;
 
@@ -757,7 +847,7 @@ static void preview_update (void) {
   }
 
   gtk_widget_draw (preview.preview, NULL);
-  gdk_flush ();
+  gdk_displays_flush ();
 }
 
 /* GUI ELEMENTS */
@@ -766,10 +856,10 @@ static GtkWidget *scaler_new (GtkAdjustment *adj, gfloat climb_rate, guint digit
   GtkWidget *box;
   GtkWidget *element;
 
-  box = gtk_hbox_new (TRUE, 2);
+  box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 2);
 
   /* hscale */
-  element = gtk_hscale_new (adj);
+  element = gtk_scale_new (GTK_ORIENTATION_HORIZONTAL, adj);
   gtk_scale_set_digits (GTK_SCALE (element), digits);
   gtk_scale_set_draw_value (GTK_SCALE (element), FALSE);
   gtk_box_pack_start (GTK_BOX (box), element, TRUE, TRUE, 0);
@@ -787,6 +877,7 @@ static GtkWidget *listbox_new (SListbox *listdef, FListboxHandler handler, guint
   GtkWidget *element;
   GtkWidget *listbox;
   GtkWidget *menu;
+  GtkWidget *menu_items;
   guint      item;
 
   listbox = gtk_option_menu_new ();
@@ -808,135 +899,125 @@ static GtkWidget *listbox_new (SListbox *listdef, FListboxHandler handler, guint
 
 static GtkWidget *create_degradation_params () {
   GtkWidget *frame;
-  GtkWidget *table;
+  GtkWidget *grid;
   GtkWidget *element;
 
   frame = gtk_frame_new (_("Degradation"));
 
-  table = gtk_table_new (2, 7, FALSE);
+  grid = gtk_grid_new ();
 
   /* blur radius */
   element = gtk_label_new (_("Radius:"));
-  gtk_misc_set_alignment (GTK_MISC (element), 1.0, 0.5);
-  gtk_table_attach_defaults (GTK_TABLE (table), element, 0, 1, 0, 1);
+  gtk_grid_attach (GTK_GRID (grid), element, 0, 0, 1, 1);
   gtk_widget_show (element);
 
-  element = scaler_new (dialog_parameters.radius, 0.01f, 2);
-  gtk_table_attach_defaults (GTK_TABLE (table), element, 1, 2, 0, 1);
+  element = scaler_new (dialog_parameters.radius, 0.01, 2);
+  gtk_grid_attach (GTK_GRID (grid), element, 1, 0, 1, 1);
   gtk_widget_show (element);
 
   /* gaussian blur */
   element = gtk_label_new (_("Gauss:"));
-  gtk_misc_set_alignment (GTK_MISC (element), 1.0, 0.5);
-  gtk_table_attach_defaults (GTK_TABLE (table), element, 0, 1, 1, 2);
+  gtk_grid_attach (GTK_GRID (grid), element, 0, 1, 1, 1);
   gtk_widget_show (element);
 
-  element = scaler_new (dialog_parameters.gauss, 0.01f, 2);
-  gtk_table_attach_defaults (GTK_TABLE (table), element, 1, 2, 1, 2);
+  element = scaler_new (dialog_parameters.gauss, 0.01, 2);
+  gtk_grid_attach (GTK_GRID (grid), element, 1, 1, 1, 1);
   gtk_widget_show (element);
 
   /* motion blur */
   element = gtk_label_new (_("Motion size:"));
-  gtk_misc_set_alignment (GTK_MISC (element), 1.0, 0.5);
-  gtk_table_attach_defaults (GTK_TABLE (table), element, 0, 1, 2, 3);
+  gtk_grid_attach (GTK_GRID (grid), element, 0, 2, 1, 1);
   gtk_widget_show (element);
 
-  element = scaler_new (dialog_parameters.motion, 0.01f, 2);
-  gtk_table_attach_defaults (GTK_TABLE (table), element, 1, 2, 2, 3);
+  element = scaler_new (dialog_parameters.motion, 0.01, 2);
+  gtk_grid_attach (GTK_GRID (grid), element, 1, 2, 1, 1);
   gtk_widget_show (element);
 
   /* motion angle */
   element = gtk_label_new (_("Motion angle:"));
-  gtk_misc_set_alignment (GTK_MISC (element), 1.0, 0.5);
-  gtk_table_attach_defaults (GTK_TABLE (table), element, 0, 1, 3, 4);
+  gtk_grid_attach (GTK_GRID (grid), element, 0, 3, 1, 1);
   gtk_widget_show (element);
 
-  element = scaler_new (dialog_parameters.mot_angle, 0.01f, 2);
-  gtk_table_attach_defaults (GTK_TABLE (table), element, 1, 2, 3, 4);
+  element = scaler_new (dialog_parameters.mot_angle, 0.01, 2);
+  gtk_grid_attach (GTK_GRID (grid), element, 1, 3, 1, 1);
   gtk_widget_show (element);
 
   /* noise reduction */
   element = gtk_label_new (_("Noise:"));
-  gtk_misc_set_alignment (GTK_MISC (element), 1.0, 0.5);
-  gtk_table_attach_defaults (GTK_TABLE (table), element, 0, 1, 4, 5);
+  gtk_grid_attach (GTK_GRID (grid), element, 0, 4, 1, 1);
   gtk_widget_show (element);
 
-  element = scaler_new (dialog_parameters.lambda, 0.1f, 1);
-  gtk_table_attach_defaults (GTK_TABLE (table), element, 1, 2, 4, 5);
+  element = scaler_new (dialog_parameters.lambda, 0.1, 1);
+  gtk_grid_attach (GTK_GRID (grid), element, 1, 4, 1, 1);
   gtk_widget_show (element);
 
   /* iterations */
   element = gtk_label_new (_("Iterations:"));
-  gtk_misc_set_alignment (GTK_MISC (element), 1.0, 0.5);
-  gtk_table_attach_defaults (GTK_TABLE (table), element, 0, 1, 5, 6);
+  gtk_grid_attach (GTK_GRID (grid), element, 0, 5, 1, 1);
   gtk_widget_show (element);
 
   element = scaler_new (dialog_parameters.iterations, 1, 0);
-  gtk_table_attach_defaults (GTK_TABLE (table), element, 1, 2, 5, 6);
+  gtk_grid_attach (GTK_GRID (grid), element, 1, 5, 1, 1);
   gtk_widget_show (element);
 
   /* boundary */
   element = gtk_label_new (_("Boundary:"));
-  gtk_misc_set_alignment (GTK_MISC (element), 1.0, 0.5);
-  gtk_table_attach_defaults (GTK_TABLE (table), element, 0, 1, 6, 7);
+  gtk_grid_attach (GTK_GRID (grid), element, 0, 6, 1, 1);
   gtk_widget_show (element);
 
   element = dialog_elements.boundary = listbox_new (boundary_listbox, boundary_callback, input_parameters.boundary);
-  gtk_table_attach_defaults (GTK_TABLE (table), element, 1, 2, 6, 7);
+  gtk_grid_attach (GTK_GRID (grid), element, 1, 6, 1, 1);
   gtk_widget_show (element);
 
-  gtk_container_set_border_width (GTK_CONTAINER (table), 5);
-  gtk_table_set_row_spacings (GTK_TABLE (table), 5);
-  gtk_table_set_col_spacings (GTK_TABLE (table), 5);
-  gtk_widget_show (table);
-  gtk_container_add (GTK_CONTAINER (frame), table);
+  gtk_container_set_border_width (GTK_CONTAINER (grid), 5);
+  gtk_grid_set_row_spacing (GTK_GRID (grid), 5);
+  gtk_grid_set_column_spacing (GTK_GRID (grid), 5);
+  gtk_widget_show (grid);
+  gtk_container_add (GTK_CONTAINER (frame), grid);
   gtk_widget_show (frame);
   return frame;
 }
 
 static GtkWidget *create_area_params () {
   GtkWidget *frame;
-  GtkWidget *table;
+  GtkWidget *grid;
   GtkWidget *element;
 
   frame = gtk_frame_new (_("Area smoothing"));
 
-  table = gtk_table_new (3, 2, FALSE);
+  grid = gtk_grid_new ();
 
   element = gtk_label_new (_("Smoothness:"));
-  gtk_misc_set_alignment (GTK_MISC (element), 1.0, 0.5);
-  gtk_table_attach_defaults (GTK_TABLE (table), element, 0, 1, 0, 1);
+  gtk_grid_attach (GTK_GRID (grid), element, 0, 0, 1, 1);
   gtk_widget_show (element);
 
   element = scaler_new (dialog_parameters.lambda_min, 1.0, 1);
-  gtk_table_attach_defaults (GTK_TABLE (table), element, 1, 2, 0, 1);
+  gtk_grid_attach (GTK_GRID (grid), element, 1, 0, 1, 1);
   gtk_widget_show (element);
 
   element = gtk_label_new (_("Area size:"));
-  gtk_misc_set_alignment (GTK_MISC (element), 1.0, 0.5);
-  gtk_table_attach_defaults (GTK_TABLE (table), element, 0, 1, 1, 2);
+  gtk_grid_attach (GTK_GRID (grid), element, 0, 1, 1, 1);
   gtk_widget_show (element);
 
   element = scaler_new (dialog_parameters.winsize, 0.0, 0);
-  gtk_table_attach_defaults (GTK_TABLE (table), element, 1, 2, 1, 2);
+  gtk_grid_attach (GTK_GRID (grid), element, 1, 1, 1, 1);
   gtk_widget_show (element);
 
   element = gtk_label_new (_("Adaptive smoothing:"));
-  gtk_misc_set_alignment (GTK_MISC (element), 1.0, 0.5);
-  gtk_table_attach_defaults (GTK_TABLE (table), element, 0, 1, 2, 3);
+  gtk_grid_attach (GTK_GRID (grid), element, 0, 2, 1, 1);
   gtk_widget_show (element);
 
   element = dialog_elements.adaptive = gtk_check_button_new ();
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (element), input_parameters.adaptive_smooth);
-  gtk_table_attach_defaults (GTK_TABLE (table), element, 1, 2, 2, 3);
+  gtk_grid_attach (GTK_GRID (grid), element, 1, 2, 1, 1);
   gtk_widget_show (element);
 
-  gtk_container_set_border_width (GTK_CONTAINER (table), 5);
-  gtk_table_set_row_spacings (GTK_TABLE (table), 5);
-  gtk_table_set_col_spacings (GTK_TABLE (table), 5);
-  gtk_widget_show (table);
+  gtk_container_set_border_width (GTK_CONTAINER (grid), 5);
+  gtk_grid_set_row_spacing (GTK_GRID (grid), 5);
+  gtk_grid_set_column_spacing (GTK_GRID (grid), 5);
+  gtk_widget_show (grid);
 
-  gtk_container_add (GTK_CONTAINER (frame), table);
+  gtk_container_add (GTK_CONTAINER (frame), grid);
   gtk_widget_show (frame);
   return frame;
 }
@@ -945,7 +1026,8 @@ static GtkWidget *create_controls () {
   GtkWidget *vbox;
   GtkWidget *element;
 
-  vbox = gtk_vbox_new (FALSE, 0);
+  vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+  gtk_container_set_border_width (GTK_CONTAINER (vbox), 0);
 
   /* blur params */
   element = create_degradation_params ();
@@ -957,13 +1039,12 @@ static GtkWidget *create_controls () {
   gtk_box_pack_start (GTK_BOX (vbox), element, FALSE, FALSE, 0);
   gtk_widget_show (element);
 
-  /* progress bar */
+  /* progress */
   element = dialog_elements.progress = gtk_progress_bar_new ();
   gtk_box_pack_start (GTK_BOX (vbox), element, FALSE, FALSE, 0);
   gtk_widget_show (element);
 
   gtk_widget_show (vbox);
-
   return vbox;
 }
 
@@ -988,43 +1069,44 @@ static void motion_angle_draw (gboolean complete_redraw) {
 
     gdk_draw_line (dialog_elements.motion_angle_dra->window, dialog_elements.motion_angle_dra->style->white_gc,
                    MOTION_ANGLE_DRA_MIDDLE, MOTION_ANGLE_DRA_MIDDLE, ox, oy);
-    gdk_flush ();
+    gdk_displays_flush ();
   }
 }
 
 static GtkWidget *motion_angle_create () {
   GtkWidget *frame;
   GtkWidget *box;
-  GtkWidget *element;
+  GtkWidget *drawing_area; /* dialog_elements.motion_angle_dra */
 
-  box = gtk_hbox_new (FALSE, 0);
+  box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
 
   frame = gtk_frame_new (_("Motion direction"));
-  element = dialog_elements.motion_angle_dra = gtk_drawing_area_new ();
-  gtk_widget_set_usize (element, MOTION_ANGLE_DRA_SIZE, MOTION_ANGLE_DRA_SIZE);
-  gtk_widget_show (element);
+  drawing_area = dialog_elements.motion_angle_dra = gtk_drawing_area_new ();
+  gtk_widget_set_size_request (drawing_area, MOTION_ANGLE_DRA_SIZE, MOTION_ANGLE_DRA_SIZE);
+  gtk_widget_show (drawing_area);
 
-  gtk_box_pack_start (GTK_BOX (box), element, TRUE, FALSE, 0);
+  gtk_box_pack_start (GTK_BOX (box), drawing_area, TRUE, FALSE, 0);
   gtk_container_set_border_width (GTK_CONTAINER (box), 5);
   gtk_widget_show (box);
 
   gtk_container_add (GTK_CONTAINER (frame), box);
   gtk_widget_show (frame);
 
-  gtk_widget_add_events (element, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_POINTER_MOTION_MASK);
-  g_signal_connect (G_OBJECT (element), "expose-event", G_CALLBACK (motion_vector_expose_callback), NULL);
-  g_signal_connect (G_OBJECT (element), "button-press-event", G_CALLBACK (motion_vector_mouse_press_callback), NULL);
+  gtk_widget_add_events (drawing_area, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_POINTER_MOTION_MASK);
+  g_signal_connect (G_OBJECT (drawing_area), "expose-event", G_CALLBACK (motion_vector_expose_callback), NULL);
+  g_signal_connect (G_OBJECT (drawing_area), "button-press-event", G_CALLBACK (motion_vector_mouse_press_callback), NULL);
 
   return frame;
 }
 
 static void motion_angle_xy_calculate (gdouble x, gdouble y) {
-  gfloat r, a;
+  gdouble r, a;
 
   x -= MOTION_ANGLE_DRA_MIDDLE;
   y = MOTION_ANGLE_DRA_MIDDLE - y;
   r = sqrt(x*x + y*y);
-  if (r < 1e-4) a = 0.0;
+  if (r < 1e-4)
+    a = 0.0;
   else {
     a = acos(x/r) * 180.0 / M_PI;
     if (y < 0.0) a = 360.0 - a;
@@ -1037,44 +1119,44 @@ static GtkWidget *preview_create () {
   GtkWidget *vbox, *hbox;
   GtkWidget *element;
   GtkWidget *scrollbar;
-  GtkWidget *table;
+  GtkWidget *grid;
 
-  vbox = gtk_vbox_new (FALSE, 2);
+  vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
   gtk_container_set_border_width (GTK_CONTAINER (vbox), 5);
 
-  table = gtk_table_new (2, 2, FALSE);
-  gtk_container_set_border_width (GTK_CONTAINER (table), 0);
+  grid = gtk_grid_new ();
+  gtk_container_set_border_width (GTK_CONTAINER (grid), 0);
 
-  gtk_table_set_col_spacings (GTK_TABLE (table), 0);
-  gtk_table_set_row_spacings (GTK_TABLE (table), 0);
+  gtk_grid_set_row_spacing (GTK_GRID (grid), 0);
+  gtk_grid_set_column_spacing (GTK_GRID (grid), 0);
 
   /* preview */
   element = preview.preview = gtk_preview_new (GTK_PREVIEW_COLOR);
   gtk_preview_size (GTK_PREVIEW (element), preview.width, preview.height);
-  gtk_table_attach (GTK_TABLE (table), element, 0, 1, 0, 1, 0, 0, 0, 0);
+  gtk_grid_attach (GTK_GRID (grid), element, 0, 0, 1, 1);
   gtk_widget_show (element);
 
-  scrollbar = gtk_hscrollbar_new (GTK_ADJUSTMENT (dialog_parameters.hscroll));
-  gtk_range_set_update_policy (GTK_RANGE (scrollbar), GTK_UPDATE_CONTINUOUS);
-  gtk_table_attach (GTK_TABLE (table), scrollbar, 0, 1, 1, 2, GTK_FILL, 0, 0, 0);
+  scrollbar = gtk_scrollbar_new (GTK_ORIENTATION_HORIZONTAL, GTK_ADJUSTMENT (dialog_parameters.hscroll));
+//unnecessary in gtk2 gtk_range_set_update_policy (GTK_RANGE (scrollbar), GTK_UPDATE_ALWAYS);
+  gtk_grid_attach (GTK_GRID (grid), scrollbar, 0, 1, 1, 1);
   gtk_widget_show (scrollbar);
 
-  scrollbar = gtk_vscrollbar_new (GTK_ADJUSTMENT (dialog_parameters.vscroll));
-  gtk_range_set_update_policy (GTK_RANGE (scrollbar), GTK_UPDATE_CONTINUOUS);
-  gtk_table_attach (GTK_TABLE (table), scrollbar, 1, 2, 0, 1, 0, GTK_FILL, 0, 0);
+  scrollbar = gtk_scrollbar_new (GTK_ORIENTATION_VERTICAL, GTK_ADJUSTMENT (dialog_parameters.vscroll));
+//unnecessary in gtk2 gtk_range_set_update_policy (GTK_RANGE (scrollbar), GTK_UPDATE_ALWAYS);
+  gtk_grid_attach (GTK_GRID (grid), scrollbar, 1, 0, 1, 1);
   gtk_widget_show (scrollbar);
 
-  gtk_box_pack_start (GTK_BOX (vbox), table, FALSE, FALSE, 0);
-  gtk_widget_show (table);
+  gtk_box_pack_start (GTK_BOX (vbox), grid, FALSE, FALSE, 0);
+  gtk_widget_show (grid);
 
   /* iterations */
-  hbox = gtk_hbox_new (FALSE, 2);
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 2);
   element = gtk_label_new (_("Iterations:"));
-  gtk_misc_set_alignment (GTK_MISC (element), 1.0, 1.0);
+//  gtk_misc_set_alignment (GTK_MISC (element), 1.0, 1.0);
   gtk_box_pack_start (GTK_BOX (hbox), element, FALSE, FALSE, 0);
   gtk_widget_show (element);
 
-  element = gtk_hscale_new (dialog_parameters.prev_iter);
+  element = gtk_scale_new (GTK_ORIENTATION_HORIZONTAL, dialog_parameters.prev_iter);
   gtk_scale_set_digits (GTK_SCALE (element), 0);
   gtk_box_pack_start (GTK_BOX (hbox), element, TRUE, TRUE, 0);
   gtk_widget_show (element);
@@ -1090,36 +1172,44 @@ static GtkWidget *preview_create () {
   return frame;
 }
 
-static gboolean dialog (void) {
+static gboolean dialog () {
   GtkWidget *element;
   GtkWidget *hbox;
-  GtkWidget *dlg;
+  GtkWidget *dialog;
   GtkWidget *vbox;
   gchar     *title;
 
   title = g_strdup_printf (_("Iterative Refocus"));
-  dialog_elements.dialog = dlg = gimp_dialog_new (title, "iterefocus",
-                NULL, 0,
+  dialog_elements.dialog = dialog = gimp_dialog_new (title, "iterefocus",
+                NULL, (GtkDialogFlags)(0),
                 refocusit_help, PLUG_IN_PROC,
-                GTK_STOCK_OK, GTK_RESPONSE_OK,
-                GIMP_STOCK_RESET, RESPONSE_RESET, 
-                _("Preview"), RESPONSE_PREVIEW,
-                GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, 
+                _("_Preview"),  RESPONSE_PREVIEW,
+                _("_Reset"),    RESPONSE_RESET,
+                _("_Cancel"),   GTK_RESPONSE_CANCEL,
+                _("_OK"),       GTK_RESPONSE_OK,
                 NULL);
   g_free (title);
+  gimp_dialog_set_alternative_button_order (GTK_DIALOG (dialog),
+                                            RESPONSE_PREVIEW,
+                                            RESPONSE_RESET,
+                                            GTK_RESPONSE_CANCEL,
+                                            GTK_RESPONSE_OK,
+                                            -1);
 
-  g_signal_connect (dlg, "response", G_CALLBACK (dialog_response), NULL);
-  g_signal_connect (dlg, "destroy", G_CALLBACK (destroy_callback), NULL);
+  g_signal_connect (dialog, "response", G_CALLBACK (dialog_response), NULL);
+  g_signal_connect_swapped (dialog, "destroy", G_CALLBACK (destroy_callback), NULL);
 
   preview_parameters_init ();
   dialog_parameters_create ();
   dialog_parameters_init ();
 
-  hbox = gtk_hbox_new (FALSE, 5);
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 5);
+  gtk_container_set_border_width (GTK_CONTAINER (hbox), 5);
   element = create_controls ();
-  gtk_box_pack_start (GTK_BOX (hbox), element, TRUE, FALSE, 5);
+  gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))),
+                      hbox, TRUE, TRUE, 5);
 
-  vbox = gtk_vbox_new (FALSE, 2);
+  vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
 
   element = motion_angle_create ();
   gtk_box_pack_start (GTK_BOX (vbox), element, TRUE, FALSE, 5);
@@ -1131,10 +1221,10 @@ static gboolean dialog (void) {
 
   gtk_box_pack_start (GTK_BOX (hbox), vbox, TRUE, FALSE, 5);
 
-  gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dlg)->vbox), hbox, TRUE, FALSE, 5);
+  gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), hbox, TRUE, FALSE, 5);
 
   gtk_widget_show (GTK_WIDGET (hbox));
-  gtk_widget_show (dlg);
+  gtk_widget_show (dialog);
 
   preview_update ();
   dialog_elements_update ();
@@ -1157,17 +1247,22 @@ static void event_loop () {
 }
 
 static void progress_bar_init () {
+  char *title;
+
+  title = g_strdup_printf (_("Refocusing..."));
   if (dialog_elements.progress) {
-//    gtk_progress_bar_update (GTK_PROGRESS_BAR (dialog_elements.progress), 0.0);
+    dialog_elements.progress = gtk_progress_bar_new();
+    gtk_progress_bar_set_text (GTK_PROGRESS_BAR (dialog_elements.progress), title);
+    gtk_progress_bar_set_show_text (GTK_PROGRESS_BAR (dialog_elements.progress), TRUE);
     gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR (dialog_elements.progress), 0.0);
   } else {
-    gimp_progress_init (_("Refocusing..."));
+    gimp_progress_init (title);
   }
+  g_free (title);
 }
 
 static void progress_bar_update (gdouble fraction) {
   if (dialog_elements.progress) {
-//    gtk_progress_bar_update (GTK_PROGRESS_BAR (dialog_elements.progress), fraction);
     gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR (dialog_elements.progress), fraction);
   } else {
     gimp_progress_update (fraction);
@@ -1178,7 +1273,6 @@ static void progress_bar_update (gdouble fraction) {
 
 static void progress_bar_reset () {
   if (dialog_elements.progress) {
-//    gtk_progress_bar_update (GTK_PROGRESS_BAR (dialog_elements.progress), 0.0);
     gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR (dialog_elements.progress), 0.0);
   } else {
     gimp_progress_update (0.0);
@@ -1188,7 +1282,7 @@ static void progress_bar_reset () {
 static int compute (int iterations) {
   int i;
   gdouble lambda_min, lambda;
-  gfloat step, final;
+  gdouble step, final;
   gboolean is_adaptive, is_smooth, is_mirror;
   convmask_t defoc, gauss, motion, blur;
 
@@ -1202,7 +1296,7 @@ static int compute (int iterations) {
 
   /* PROGRESS BAR */
   step = 1.0;
-  final = (gfloat)iterations;
+  final = (gdouble)(iterations);
   if (is_adaptive) {
     final *= 2;
   } else if (is_smooth) {
@@ -1217,9 +1311,9 @@ static int compute (int iterations) {
   hopfield_data_load ();
   preview_update ();
 
-  if (blur_create_defocus (&defoc, (double)input_parameters.radius) == NULL) goto compute_err0;
-  if (blur_create_gauss (&gauss, (double)input_parameters.gauss) == NULL) goto compute_err1;
-  if (blur_create_motion (&motion, (double)input_parameters.motion, (double)input_parameters.mot_angle) == NULL) goto compute_err2;
+  if (blur_create_defocus (&defoc, (gdouble)(input_parameters.radius)) == NULL) goto compute_err0;
+  if (blur_create_gauss (&gauss, (gdouble)(input_parameters.gauss)) == NULL) goto compute_err1;
+  if (blur_create_motion (&motion, (gdouble)(input_parameters.motion), (gdouble)(input_parameters.mot_angle)) == NULL) goto compute_err2;
   if (convmask_convolve (&blur, &defoc, &gauss) == NULL)  goto compute_err3;
   if (convmask_convolve (&hopfield.blur, &blur, &motion) == NULL) goto compute_err4;
   convmask_destroy (&blur);
@@ -1228,8 +1322,8 @@ static int compute (int iterations) {
   convmask_destroy (&defoc);
 #if defined(NDEBUG)
   int x, y, r;
-  printf("combine blur+motion+guass+defocus using convmask_convolve()");
-  convmask_print(&hopfield.blur, "hopfield.blur");
+  printf ("combine blur+motion+guass+defocus using convmask_convolve()");
+  convmask_print (&hopfield.blur, "hopfield.blur");
 #endif
 
   if (is_smooth) {
@@ -1241,15 +1335,15 @@ static int compute (int iterations) {
     x = image_parameters.sel_width;
     y = image_parameters.sel_height;
     r = hopfield.filter.radius;
-    printf("new, is_smooth, lambda_create(), x=%d y=%d lambda=%g lambda_min=%g x=%d y=%d winsize=%d combined radius=%d\n", x, y, lambda, lambda_min, hopfield.lambdafldR.x, hopfield.lambdafldR.y, input_parameters.winsize, r);
-    printf("hopfield.lambdafldR, hopfield.imageR\n");
+    printf ("new, is_smooth, lambda_create(), x=%d y=%d lambda=%g lambda_min=%g x=%d y=%d winsize=%d combined radius=%d\n", x, y, lambda, lambda_min, hopfield.lambdafldR.x, hopfield.lambdafldR.y, input_parameters.winsize, r);
+    printf ("hopfield.lambdafldR, hopfield.imageR\n");
     for (y = 0; y <= 8; y++) {
       for (x = 0; x <= 8; x++) {
-        printf("|%d %d %f",x,y, hopfield.lambdafldR.lambda[hopfield.lambdafldR.x * y + x]);
+        printf ("|%d %d %f",x,y, hopfield.lambdafldR.lambda[hopfield.lambdafldR.x * y + x]);
       }
-      printf("\n");
+      printf ("\n");
     }
-    convmask_print(&hopfield.filter, "hopfield.filter");
+    convmask_print (&hopfield.filter, "hopfield.filter");
 #endif
     if (image_parameters.rgb) {
       lambda_set_mirror (&hopfield.lambdafldG, is_mirror);
@@ -1260,21 +1354,21 @@ static int compute (int iterations) {
       if (lambda_create (&hopfield.lambdafldB, image_parameters.sel_width, image_parameters.sel_height, lambda_min, input_parameters.winsize, &hopfield.filter) == NULL) goto compute_err8;
     }
 #if defined(NDEBUG)
-    printf("..did smooth (before !is_adaptive)\n");
+    printf ("..did smooth (before !is_adaptive)\n");
 #endif
 
     if (!is_adaptive) {
       if (lambda_calculate (&hopfield.lambdafldR, &hopfield.imageR) == NULL) goto compute_err9;
-      progress_bar_update(step++ / final);
+      progress_bar_update (step++ / final);
 #if defined(NDEBUG)
     x = hopfield.lambdafldR.x;
     y = hopfield.lambdafldR.y;
-    printf("!is_adaptive, lambda_calculate(), x=%d y=%d, hopfield.lambdafldR.lambda[] hopfield.imageR[]\n", x, y);
+    printf ("!is_adaptive, lambda_calculate(), x=%d y=%d, hopfield.lambdafldR.lambda[] hopfield.imageR[]\n", x, y);
     for (y = 0; y <= 8; y++) {
       for (x = 0; x <= 8; x++) {
-        printf("|%d %d %f %f",x,y, hopfield.lambdafldR.lambda[hopfield.lambdafldR.x * y + x], image_get(&hopfield.imageR,x,y) );
+        printf ("|%d %d %f %f",x,y, hopfield.lambdafldR.lambda[hopfield.lambdafldR.x * y + x], image_get(&hopfield.imageR,x,y) );
       }
-      printf("\n");
+      printf ("\n");
     }
 #endif
       if (image_parameters.rgb) {
@@ -1284,7 +1378,7 @@ static int compute (int iterations) {
         progress_bar_update (step++ / final);
       }
 #if defined(NDEBUG)
-      printf("..did !is_adaptive, lambda=%g\n", lambda);
+      printf ("..did !is_adaptive, lambda=%g\n", lambda);
 #endif
     }
   }
@@ -1299,17 +1393,17 @@ static int compute (int iterations) {
 #if defined(NDEBUG)
   x = hopfield.lambdafldR.x;
   y = hopfield.lambdafldR.y;
-  printf("is_smooth, hopfield_create(), x=%d y=%d\n", x, y);
-  printf("hopfield.lambdafldR.lamba[], hopfield.imageR[]\n");
+  printf ("is_smooth, hopfield_create(), x=%d y=%d\n", x, y);
+  printf ("hopfield.lambdafldR.lamba[], hopfield.imageR[]\n");
   for (y = 0; y <= 8; y++) {
     for (x = 0; x <= 8; x++) {
-      printf("|%d %d %f %f",x,y, hopfield.lambdafldR.lambda[hopfield.lambdafldR.x * y + x], image_get(&hopfield.imageR,x,y) );
+      printf ("|%d %d %f %f",x,y, hopfield.lambdafldR.lambda[hopfield.lambdafldR.x * y + x], image_get (&hopfield.imageR,x,y) );
     }
-    printf("\n");
+    printf ("\n");
   }
-  printf("weights=");
-  weights_print(&hopfield.hopfieldR.weights, "hopfield.blur");
-  convmask_print(&hopfield.blur, "hopfield.blur");
+  printf ("weights=");
+  weights_print (&hopfield.hopfieldR.weights, "hopfield.blur");
+  convmask_print (&hopfield.blur, "hopfield.blur");
 #endif
   if (image_parameters.rgb) {
     hopfield.hopfieldG.lambda = lambda;
@@ -1327,8 +1421,8 @@ static int compute (int iterations) {
 #if defined(NDEBUG)
   /* if image uses 0..255 or 0.0..1.0, weights,blur,lamba */
   /* come out to be equal value, others differ by ~16025. */
-  printf("{weights,blur,lambda}=same,imageR=0..255vs0..1\n");
-  printf("..did lambda = %g, now do iterations=%d\n", lambda, iterations);
+  printf ("{weights,blur,lambda}=same,imageR=0..255vs0..1\n");
+  printf ("..did lambda = %g, now do iterations=%d\n", lambda, iterations);
 #endif
 
   for (i = 1; i <= iterations; i++) {
@@ -1352,20 +1446,20 @@ static int compute (int iterations) {
     }
     hopfield_iteration (&hopfield.hopfieldR);
 
-#if defined(_NDEBUG)
+#if defined(NDEBUG)
   x = hopfield.lambdafldR.x;
   y = hopfield.lambdafldR.y;
-  printf("iteration=%d, hopfield_iteration(), x=%d y=%d\n", i, x, y);
-  printf("hopfield.lambdafldR.lamba[], hopfield.imageR[]\n");
+  printf ("iteration=%d, hopfield_iteration(), x=%d y=%d\n", i, x, y);
+  printf ("hopfield.lambdafldR.lamba[], hopfield.imageR[]\n");
   for (y = 0; y <= 8; y++) {
     for (x = 0; x <= 8; x++) {
-      printf("|%d %d %f %f",x,y, hopfield.lambdafldR.lambda[hopfield.lambdafldR.x * y + x], image_get(&hopfield.imageR,x,y) );
+      printf ("|%d %d %f %f",x,y, hopfield.lambdafldR.lambda[hopfield.lambdafldR.x * y + x], image_get (&hopfield.imageR,x,y) );
     }
-    printf("\n");
+    printf ("\n");
   }
-  printf("weights=");
-  weights_print(&hopfield.hopfieldR.weights, "hopfield.blur");
-  convmask_print(&hopfield.blur, "hopfield.blur");
+  printf ("weights=");
+  weights_print (&hopfield.hopfieldR.weights, "hopfield.blur");
+  convmask_print (&hopfield.blur, "hopfield.blur");
 #endif
 
     progress_bar_update (step++ / final);
@@ -1441,13 +1535,16 @@ compute_err0:
   return 0;
 }
 
-static void
-run (const gchar *name, gint nparams, const GimpParam *param,
-     gint *nreturn_vals, GimpParam **return_vals) {
-  GimpRunMode       run_mode; /* Current run mode */
-  GimpPDBStatusType status;   /* Return status */
-  GimpParam        *values;   /* Return values */
-  gchar            *title;
+static GimpValueArray *
+refocusit_run (GimpProcedure       *procedure,
+               GimpRunMode          run_mode,  /* Current run mode */
+               GimpImage           *image,
+               GimpDrawable       **drawables,
+               GimpProcedureConfig *proc_config,
+               gpointer             run_data)
+{
+  GimpPDBStatusType  status = GIMP_PDB_SUCCESS;
+  GError            *error  = NULL;
 
 #ifdef ENABLE_NLS
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
@@ -1457,28 +1554,47 @@ run (const gchar *name, gint nparams, const GimpParam *param,
   textdomain (GETTEXT_PACKAGE);
 #endif
 
-  /* Set mandatory return values */
-  *nreturn_vals = 1;
-  values = g_new (GimpParam, 1);
-  values[0].type = GIMP_PDB_STATUS;
-  values[0].data.d_status = GIMP_PDB_CALLING_ERROR;
-  *return_vals  = values;
-  status = GIMP_PDB_SUCCESS;
+  if (gimp_core_object_array_get_length ((GObject **)(drawables)) != 1) {
+    g_set_error (&error, GIMP_PLUG_IN_ERROR, 0,
+                 _("Procedure '%s' only works with one drawable."),
+                 PLUG_IN_PROC);
 
+    return gimp_procedure_new_return_values (procedure,
+                                             GIMP_PDB_CALLING_ERROR,
+                                             error);
+  }
   /* Initialize parameter data... */
+  if (image_parameters_init (drawables[0])) {
+    g_set_error (&error, GIMP_PLUG_IN_ERROR, 0,
+                 _("Procedure '%s' only works with RGB or GRAY images."),
+                 PLUG_IN_PROC);
+
+    return gimp_procedure_new_return_values (procedure,
+                                             GIMP_PDB_CALLING_ERROR,
+                                             error);
+  }
   input_parameters_init ();
-  if (image_parameters_init (param, values)) return;
-  if (hopfield_data_init ()) return;
+
+  /* Load image data... */
+  if (hopfield_data_init ()) {
+    /* ...must be a very, very large image to stop at this point!!! */
+    g_set_error (&error, GIMP_PLUG_IN_ERROR, 0,
+                 "Procedure '%s' ran out of memory! Please report as issue.",
+                 PLUG_IN_PROC);
+
+    return gimp_procedure_new_return_values (procedure,
+                                             GIMP_PDB_CALLING_ERROR,
+                                             error);
+  }
   hopfield_data_load ();
 
   /* See how we will run */
-  run_mode = param[0].data.d_int32;
   switch (run_mode) {
   case GIMP_RUN_INTERACTIVE:
     /*INIT_I18N_UI();*/
-    title = g_strdup_printf (_("Iterative Refocus - %s"), PACKAGE_VERSION);
-    gimp_ui_init (title, TRUE);
-    input_parameters_load ();
+    input_parameters_fetch_params (proc_config);
+    //input_parameters_load ();
+    gimp_ui_init (PLUG_IN_BINARY);
     if (dialog ()) {
       input_parameters_save ();
     }
@@ -1487,16 +1603,18 @@ run (const gchar *name, gint nparams, const GimpParam *param,
 
   case GIMP_RUN_NONINTERACTIVE:
     /*INIT_I18N();*/
-    if (nparams != 11) status = GIMP_PDB_CALLING_ERROR;
-    else {
-      input_parameters_fetch_params (param);
+//    if (nparams != 11) status = GIMP_PDB_CALLING_ERROR;
+//    else {
+      input_parameters_fetch_params (proc_config);
       compute (input_parameters.iterations);
-    }
+//    }
     break;
 
   case GIMP_RUN_WITH_LAST_VALS:
     /*INIT_I18N();*/
-    input_parameters_load ();
+    input_parameters_fetch_params (proc_config);
+    //input_parameters_load ();
+    gimp_ui_init (PLUG_IN_BINARY);
     compute (input_parameters.iterations);
     gimp_displays_flush ();
     break;
@@ -1512,8 +1630,10 @@ run (const gchar *name, gint nparams, const GimpParam *param,
   input_parameters_destroy ();
 
   gegl_exit();
-
-  values[0].data.d_status = status;
+#if defined(NDEBUG)
+  printf ("Program end.\n");
+#endif
+  return gimp_procedure_new_return_values (procedure, status, NULL);
 }
 
 static void refocusit_help (const gchar *help_id, gpointer help_data) {
