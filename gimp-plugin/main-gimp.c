@@ -222,10 +222,9 @@ static void dialog_elements_update ();
 static void dialog_elements_destroy ();
 static void dialog_response(GtkWidget *widget, gint response_id, gpointer data);
 
-static void input_parameters_init ();
-static void input_parameters_destroy ();
+static void input_parameters_reset ();
 //static void input_parameters_load ();
-static void input_parameters_save ();
+//static void input_parameters_save ();
 static void input_parameters_fetch_params (GimpProcedureConfig *proc_config);
 static void input_parameters_fetch_dlg();
 static int  image_parameters_init (GimpDrawable *drawable);
@@ -337,7 +336,7 @@ static void ok_callback (GtkWidget *widget, gpointer data) {
 }
 
 static void defaults_callback (GtkWidget *widget, gpointer data) {
-  input_parameters_init ();
+  input_parameters_reset ();
   dialog_parameters_init ();
   dialog_elements_update ();
   hopfield_data_load ();
@@ -364,6 +363,7 @@ refocusit_create_procedure (GimpPlugIn *plug_in,
                         const gchar *name)
 {
   GimpProcedure *procedure = NULL;
+  gchar *longdesc;
 
   if (!strcmp (name, PLUG_IN_PROC)) {
 
@@ -377,28 +377,25 @@ refocusit_create_procedure (GimpPlugIn *plug_in,
 #ifdef HAVE_GETTEXT
     /* Initialize i18n support */
     setlocale (LC_ALL, "");
-    bindtextdomain (GETTEXT_PACKAGE, gimp_locale_directory ());
+    bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
 #ifdef HAVE_BIND_TEXTDOMAIN_CODESET
     bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif
     textdomain (GETTEXT_PACKAGE);
 #endif
 
-/************************ copied from gimp2.10
- * gimp_plugin_domain_register (GETTEXT_PACKAGE, LOCALEDIR);
- * gimp_plugin_menu_register (PROCEDURE_NAME, "<Image>/Filters/Enhance");
- */
-
     gimp_procedure_set_menu_label (procedure, _(PLUG_IN_MENU_LABEL));
     gimp_procedure_add_menu_path (procedure, PLUG_IN_MENU_LOCATION);
+    longdesc = g_strdup_printf (_(PLUG_IN_LONG_DESC));
     gimp_procedure_set_documentation (procedure,
     /* menu entry tooltip blurb   */  _(PLUG_IN_SHORT_DESC),
-    /* help for script developers */  _(PLUG_IN_LONG_DESC),
+    /* help for script developers */  longdesc,
     /* help ID                    */  PLUG_IN_PROC);
+    g_free (longdesc);
     gimp_procedure_set_attribution (procedure,
-    /* author(s) original, GIMP3 */ "Lukas Kunc (2003), Jose Da Silva (2025)",
+    /* author(s) original, GIMP3 */ "Lukas Kunc (2003), Jose Da Silva (2026)",
     /* copyright license         */ "GPL3+",
-    /* date for the latest build */ "2025");
+    /* date for the latest build */ "2026");
 
     gimp_procedure_add_double_argument (procedure, "radius",
                                         _("_Radius"), _("Blur radius (default = 6.0)"),
@@ -422,23 +419,19 @@ refocusit_create_procedure (GimpPlugIn *plug_in,
                                         G_PARAM_READWRITE);
     gimp_procedure_add_int_argument (procedure, "boundary",
                                      _("_Boundary"), _("Boundary conditions (default = mirror / 0)"),
-                                     0, 2, 0,
-                                     G_PARAM_READWRITE);
+                                     0, 2, 0, G_PARAM_READWRITE);
     gimp_procedure_add_double_argument (procedure, "lambda_min",
                                         _("Lambda _Min"), _("Area smoothnes (default = 30.0)"),
                                         0.0, (gdouble)(LAMBDAMIN_MAX), 30.0,
                                         G_PARAM_READWRITE);
     gimp_procedure_add_int_argument (procedure, "adaptive_smooth",
                                      _("Adaptive Smoothing"), _("Adaptive smoothing (default = TRUE)"),
-                                     0, 1, 1,
-                                     G_PARAM_READWRITE);
+                                     0, 1, 1, G_PARAM_READWRITE);
     gimp_procedure_add_int_argument (procedure, "winsize",
-                                     _("_Window Size"),
-                                     _("Smooth area size (default = 3)"),
+                                     _("_Window Size"),  _("Smooth area size (default = 3)"),
                                      1, 16, 1, G_PARAM_READWRITE);
     gimp_procedure_add_int_argument (procedure, "iterations",
-                                     _("_Iterations"),
-                                     _("Number of iterations (default = 100)"),
+                                     _("_Iterations"),  _("Number of iterations (default = 100)"),
                                      1, 200, 100, G_PARAM_READWRITE);
     gimp_procedure_add_int_argument (procedure, "prev_iter",
                                      _("_Preview Iterations"),
@@ -449,10 +442,7 @@ refocusit_create_procedure (GimpPlugIn *plug_in,
   return procedure;
 }
 
-static void input_parameters_destroy () {
-}
-
-static void input_parameters_init () {
+static void input_parameters_reset () {
   input_parameters.radius = 6.0;
   input_parameters.gauss = 0.0;
   input_parameters.motion = 0.0;
@@ -471,9 +461,9 @@ static void input_parameters_init () {
 //  gimp_procedural_db_get_data (PACKAGE_NAME, &input_parameters);
 //}
 
-static void input_parameters_save () {
-  gimp_procedural_db_set_data (PACKAGE_NAME, &input_parameters, sizeof (input_parameters));
-}
+//static void input_parameters_save () {
+//  gimp_procedural_db_set_data (PACKAGE_NAME, &input_parameters, sizeof (input_parameters));
+//}
 
 static void input_parameters_fetch_params (GimpProcedureConfig *proc_config) {
   if (proc_config) {
@@ -491,7 +481,7 @@ static void input_parameters_fetch_params (GimpProcedureConfig *proc_config) {
     /* int */     "prev_iter",       &input_parameters.prev_iter,
                   NULL);
   } else {
-    input_parameters_init ();
+    input_parameters_reset ();
   }
 }
 
@@ -550,7 +540,8 @@ static void dialog_parameters_create () {
 
 static void dialog_elements_update () {
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (dialog_elements.adaptive), input_parameters.adaptive_smooth);
-  gtk_option_menu_set_history (GTK_OPTION_MENU (dialog_elements.boundary), input_parameters.boundary);
+  //gtk_option_menu_set_history (GTK_OPTION_MENU (dialog_elements.boundary), input_parameters.boundary);
+  gtk_combo_box_set_active (GTK_COMBO_BOX (dialog_elements.boundary), input_parameters.boundary);
   if (dialog_elements.area_smooth && gtk_adjustment_get_value (dialog_parameters.lambda) < 1e-6) {
     gtk_widget_set_sensitive (GTK_WIDGET (dialog_elements.area_smooth), FALSE);
     dialog_parameters.area_smooth_enabled = FALSE;
@@ -559,11 +550,11 @@ static void dialog_elements_update () {
 }
 
 static void dialog_elements_destroy () {
-  destroy (dialog_elements.progress);
-  destroy (dialog_elements.adaptive);
-  destroy (dialog_elements.area_smooth);
-  destroy (dialog_elements.boundary);
-  destroy (dialog_elements.dialog);
+  gtk_widget_destroy (dialog_elements.progress);
+  gtk_widget_destroy (dialog_elements.adaptive);
+  gtk_widget_destroy (dialog_elements.area_smooth);
+  gtk_widget_destroy (dialog_elements.boundary);
+  gtk_widget_destroy (dialog_elements.dialog);
   dialog_elements.progress    = NULL;
   dialog_elements.adaptive    = NULL;
   dialog_elements.area_smooth = NULL;
@@ -611,7 +602,7 @@ static int image_parameters_init (GimpDrawable *drawable) {
 }
 
 static void image_parameters_destroy () {
-  gimp_drawable_detach (image_parameters.drawable);
+  //gimp_drawable_detach (image_parameters.drawable);
   if (preview.data)   g_free(preview.data);
   if (preview.linear) g_free(preview.linear);
 }
@@ -659,9 +650,9 @@ static int hopfield_data_init () {
   image_parameters.xImg = xImg = gimp_drawable_get_width (image_parameters.drawable);
   image_parameters.yImg = yImg = gimp_drawable_get_height (image_parameters.drawable);
   pixelCount = xImg * yImg;
-  if (!(image_parameters.srcImg = g_new (gdouble, pixelCount * (image_parameters.rgb ? 3:1))))
+  if (!(image_parameters.srcImg = g_new (gdouble, (size_t)(pixelCount * (image_parameters.rgb ? 3:1)))))
     goto hopfield_data_init_err0;
-  if (!(image_parameters.destImg = g_new (guchar, pixelCount * bppImg)))
+  if (!(image_parameters.destImg = g_new (guchar, (size_t)(pixelCount * bppImg))))
     goto hopfield_data_init_err1;
 
   if (!(image_parameters.srcBuf = gimp_drawable_get_buffer (image_parameters.drawable))) {
@@ -837,17 +828,18 @@ static void preview_fetch_hopfield () {
 }
 
 static void preview_update () {
-  guint   y;
-  guchar *image;
+  GdkPixbuf *pixbuf;
 
   preview_fetch_hopfield ();
 
-  for (y = 0, image = preview.data; y < preview.height; y ++, image += preview.width * 3) {
-    gtk_preview_draw_row (GTK_PREVIEW (preview.preview), image, 0, y, preview.width);
-  }
+  pixbuf = gdk_pixbuf_new_from_data (preview.data, GDK_COLORSPACE_RGB, FALSE, 8,
+                                     preview.width, preview.height, preview.width * 3,
+                                     NULL, NULL);
+  gtk_image_set_from_pixbuf (GTK_IMAGE (preview.preview), pixbuf);
+  g_object_unref (pixbuf);
 
-  gtk_widget_draw (preview.preview, NULL);
-  gdk_displays_flush ();
+  gtk_widget_queue_draw (preview.preview);
+  gdk_flush ();
 }
 
 /* GUI ELEMENTS */
@@ -879,22 +871,36 @@ static GtkWidget *listbox_new (SListbox *listdef, FListboxHandler handler, guint
   GtkWidget *menu;
   GtkWidget *menu_items;
   guint      item;
+  GtkWidget *combo_box;
 
-  listbox = gtk_option_menu_new ();
-  menu = gtk_menu_new ();
+  combo_box = gtk_combo_box_text_new ();
   item = 0;
   while (listdef->name) {
-    element = gtk_menu_item_new_with_label (listdef->name);
-    gtk_menu_shell_append (GTK_MENU_SHELL (menu), element);
-    g_signal_connect (G_OBJECT (element), "activate", G_CALLBACK (handler), GUINT_TO_POINTER (item));
-    gtk_widget_show (element);
+    gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo_box), listdef->name);
+
+    g_signal_connect (G_OBJECT (combo_box), "changed", G_CALLBACK (handler), GUINT_TO_POINTER (item));
+    gtk_widget_show (GTK_WIDGET (combo_box));
     listdef->menu_item = element;
     listdef++; item++;
   }
+  gtk_combo_box_set_active (GTK_COMBO_BOX (combo_box), 0);
+  return combo_box;
 
-  gtk_option_menu_set_menu (GTK_OPTION_MENU (listbox), menu);
-  gtk_option_menu_set_history (GTK_OPTION_MENU (listbox), active);
-  return listbox;
+//  listbox = gtk_option_menu_new ();
+//  menu = gtk_menu_new ();
+//  item = 0;
+//  while (listdef->name) {
+//    element = gtk_menu_item_new_with_label (listdef->name);
+//    gtk_menu_shell_append (GTK_MENU_SHELL (menu), element);
+//    g_signal_connect (G_OBJECT (element), "activate", G_CALLBACK (handler), GUINT_TO_POINTER (item));
+//    gtk_widget_show (element);
+//    listdef->menu_item = element;
+//    listdef++; item++;
+//  }
+//
+//  gtk_option_menu_set_menu (GTK_OPTION_MENU (listbox), menu);
+//  gtk_option_menu_set_history (GTK_OPTION_MENU (listbox), active);
+//  return listbox;
 }
 
 static GtkWidget *create_degradation_params () {
@@ -1053,7 +1059,7 @@ static void motion_angle_draw (gboolean complete_redraw) {
   gdouble x, y, a;
 
   if (dialog_elements.motion_angle_dra) {
-    if (complete_redraw) {
+/*    if (complete_redraw) {
       gdk_draw_arc (dialog_elements.motion_angle_dra->window, dialog_elements.motion_angle_dra->style->black_gc, TRUE,
                     0, 0, MOTION_ANGLE_DRA_SIZE, MOTION_ANGLE_DRA_SIZE, 0, 360*64);
     }
@@ -1070,7 +1076,7 @@ static void motion_angle_draw (gboolean complete_redraw) {
     gdk_draw_line (dialog_elements.motion_angle_dra->window, dialog_elements.motion_angle_dra->style->white_gc,
                    MOTION_ANGLE_DRA_MIDDLE, MOTION_ANGLE_DRA_MIDDLE, ox, oy);
     gdk_displays_flush ();
-  }
+*/  }
 }
 
 static GtkWidget *motion_angle_create () {
@@ -1118,8 +1124,10 @@ static GtkWidget *preview_create () {
   GtkWidget *frame;
   GtkWidget *vbox, *hbox;
   GtkWidget *element;
+  GtkWidget *image;
   GtkWidget *scrollbar;
   GtkWidget *grid;
+  GdkPixbuf *pixbuf;
 
   vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
   gtk_container_set_border_width (GTK_CONTAINER (vbox), 5);
@@ -1131,8 +1139,9 @@ static GtkWidget *preview_create () {
   gtk_grid_set_column_spacing (GTK_GRID (grid), 0);
 
   /* preview */
-  element = preview.preview = gtk_preview_new (GTK_PREVIEW_COLOR);
-  gtk_preview_size (GTK_PREVIEW (element), preview.width, preview.height);
+  pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, preview.width, preview.height);
+  element = preview.preview = gtk_image_new_from_pixbuf (pixbuf);
+  g_object_unref (pixbuf);
   gtk_grid_attach (GTK_GRID (grid), element, 0, 0, 1, 1);
   gtk_widget_show (element);
 
@@ -1221,7 +1230,8 @@ static gboolean dialog () {
 
   gtk_box_pack_start (GTK_BOX (hbox), vbox, TRUE, FALSE, 5);
 
-  gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), hbox, TRUE, FALSE, 5);
+  //gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), hbox, TRUE, FALSE, 5);
+  gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG(dialog))), hbox, TRUE, FALSE, 5);
 
   gtk_widget_show (GTK_WIDGET (hbox));
   gtk_widget_show (dialog);
@@ -1573,7 +1583,7 @@ refocusit_run (GimpProcedure       *procedure,
                                              GIMP_PDB_CALLING_ERROR,
                                              error);
   }
-  input_parameters_init ();
+  input_parameters_reset ();
 
   /* Load image data... */
   if (hopfield_data_init ()) {
@@ -1596,7 +1606,7 @@ refocusit_run (GimpProcedure       *procedure,
     //input_parameters_load ();
     gimp_ui_init (PLUG_IN_BINARY);
     if (dialog ()) {
-      input_parameters_save ();
+//      input_parameters_save ();
     }
     gimp_displays_flush ();
     break;
@@ -1627,7 +1637,6 @@ refocusit_run (GimpProcedure       *procedure,
   /* Detach from the drawable... */
   hopfield_data_destroy ();
   image_parameters_destroy ();
-  input_parameters_destroy ();
 
   gegl_exit();
 #if defined(NDEBUG)

@@ -1,32 +1,23 @@
+# -*- Autoconf -*-
 dnl Process this file with autoconf to produce a configure script.
 
-# Copyright (C) 2025 by Jose Da Silva
+# Copyright (C) 2026 by Jose Da Silva
 
-AC_PREREQ(2.69)
+AC_PREREQ([2.69])
+#--------------------------------------------------------------------------
+# Setup these variables before running AC_INIT
 
-dnl Name your plug-in here
 m4_define([plugin_name], [refocus-it])
-
-dnl These two define the plug-in version number
 m4_define([plugin_major_version], [2])
 m4_define([plugin_minor_version], [2])
-
 m4_define([plugin_version], [plugin_major_version.plugin_minor_version])
-m4_define([plugin_package_name], [gimp-refocus-it])
-m4_define([plugin_package_home], [https://github.com/JoesCat/gimp-refocus-it])
-m4_define([plugin_package_email], [https://github.com/JoesCat/gimp-refocus-it/issues])
-
+m4_define([plugin_package_name], [gimp3-refocus-it])
+m4_define([plugin_package_home], [https://github.com/JoesCat/gimp3-refocus-it])
+m4_define([plugin_package_email], [https://github.com/JoesCat/gimp3-refocus-it/issues])
+#--------------------------------------------------------------------------
 AC_INIT([plugin_name], [plugin_version], [plugin_package_email],
 	[plugin_package_name], [plugin_package_home])
-
-AC_DEFINE(PLUGIN_NAME, ["plugin_name"], [Plug-In name])
-AC_DEFINE(PLUGIN_EMAIL, [plugin_package_email], [Plug-In package email])
-AC_DEFINE(PACKAGE_NAME, ["plugin_package_name"], [Plug-In Package name])
-AC_DEFINE(PLUGIN_VERSION, ["plugin_version"], [Plug-In version])
-
-AC_DEFINE(PLUGIN_MAJOR_VERSION, plugin_major_version, [Plug-In major version])
-AC_DEFINE(PLUGIN_MINOR_VERSION, plugin_minor_version, [Plug-In minor version])
-
+#--------------------------------------------------------------------------
 AC_CONFIG_SRCDIR([src/image.c])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
@@ -48,17 +39,23 @@ AC_PROG_SED
 AC_PROG_LN_S
 AC_PROG_MKDIR_P
 AC_PATH_PROG([CHMOD],[chmod],[:])
-AC_PATH_PROG([STRIP],[strip],[:])
-AC_PATH_PROG([GIMPTOOL3],[gimptool-3.0],[:])
-AC_PATH_PROG([PKG_CONFIG],[pkg-config],[:])
+AC_CHECK_PROGS([GIMP],[gimp-3],[:])
+AC_CHECK_PROGS([GIMPTOOL],[gimptool-3],[:])
 AC_PATH_PROG([MD5SUM],[md5sum],[:])
 AC_PATH_PROG([MSGFMT],[msgfmt],[:])
 AC_PATH_PROG([MSGINIT],[msginit],[:])
 AC_PATH_PROG([MSGMERGE],[msgmerge],[:])
+AC_PATH_PROG([PKG_CONFIG],[pkg-config],[:])
+AC_PATH_PROG([STRIP],[strip],[:])
 AC_PATH_PROG([XGETTEXT],[xgettext],[:])
 AM_CONFIG_HEADER(refocus-it-config.h)
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
+
+#--------------------------------------------------------------------------
+# Enable silent build rules by default, this requires atleast Automake-1.11
+# Disable by passing --disable-silent-rules to configure or using make V=1
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],[AC_SUBST([AM_DEFAULT_VERBOSITY],[1])])
 
 #--------------------------------------------------------------------------
 ACLOCAL="$ACLOCAL $ACLOCAL_FLAGS"
@@ -125,7 +122,6 @@ if test x"${have_gettext}" = xyes; then
 fi
 
 #--------------------------------------------------------------------------
-dnl Gimp-plugin
 # Check for libgimp/gimp.h include file and libgimp library.
 GIMP_CFLAGS=
 GIMP_LIBS=
@@ -152,6 +148,8 @@ else
 fi
 GIMP_BINDIR=${gimp3_bindir}/plug-ins/refocus-it
 AC_SUBST(GIMP_BINDIR)
+
+AM_CONDITIONAL([HAVEGIMPTOOL],[test "${GIMPTOOL}"x != x])
 
 GTK_CFLAGS=
 GTK_LIBS=
@@ -180,13 +178,14 @@ CPPFLAGS="${CPPFLAGS} AS_ESCAPE([-I${top_builddir}]) AS_ESCAPE([-I${top_srcdir}]
 AC_SUBST([CPPFLAGS],["${CPPFLAGS}"])
 
 #--------------------------------------------------------------------------
-# Pass variables to MAKEFILE.AM
-AC_SUBST([PLUGIN_MAJOR_VERSION],[plugin_major_version])
-AC_SUBST([PLUGIN_MINOR_VERSION],[plugin_minor_version])
-AC_SUBST([PLUGIN_VERSION],[plugin_version])
-AC_SUBST([PLUGIN_PACKAGE_NAME],[plugin_package_email])
-AC_SUBST([PLUGIN_EMAIL],[plugin_package_email])
-AC_SUBST([HOST],["$host"])
+# Pass more variables to refocus-it-config.h
+AC_DEFINE(PLUGIN_NAME,["plugin_name"],[Plug-In name])
+AC_DEFINE(PLUGIN_EMAIL,[plugin_package_email],[Plug-In package email])
+AC_DEFINE(PACKAGE_NAME,["plugin_package_name"],[Plug-In Package name])
+AC_DEFINE(PLUGIN_VERSION,["plugin_version"],[Plug-In version])
+
+AC_DEFINE([PLUGIN_MAJOR_VERSION], plugin_major_version,[Plug-In major version])
+AC_DEFINE([PLUGIN_MINOR_VERSION], plugin_minor_version,[Plug-In minor version])
 
 # Put ifndef wrapper on refocus-it-config.h so we don't call it repeatedly.
 AH_TOP([#ifndef REFOCUS_IT_CONFIG_H
@@ -194,6 +193,14 @@ AH_TOP([#ifndef REFOCUS_IT_CONFIG_H
 AH_BOTTOM([
 
 #endif])
+#--------------------------------------------------------------------------
+# Pass more variables to MAKEFILE.AM
+AC_SUBST([PLUGIN_MAJOR_VERSION],[plugin_major_version])
+AC_SUBST([PLUGIN_MINOR_VERSION],[plugin_minor_version])
+AC_SUBST([PLUGIN_VERSION],[plugin_version])
+AC_SUBST([PLUGIN_PACKAGE_NAME],[plugin_package_email])
+AC_SUBST([PLUGIN_EMAIL],[plugin_package_email])
+AC_SUBST([HOST],["$host"])
 
 #--------------------------------------------------------------------------
 AC_CONFIG_FILES([
@@ -210,6 +217,9 @@ Configuration:
 
   Source code location	${srcdir}
   Build code location	${builddir}
+  docs root dir		${datarootdir}
+  GIMP3 locale dir	${LOCALEDIR}
+  Use locale languages	${have_gettext}
   Compiler		${CC}
   CPPFLAGS		${CPPFLAGS}
   CFLAGS		${CFLAGS}
@@ -222,7 +232,4 @@ Configuration:
   GIMP_LIBS		${GIMP_LIBS}
   GTK_CFLAGS		${GTK_CFLAGS}
   GTK_LIBS		${GTK_LIBS}
-
-  Use language locale	${have_gettext}
-  locale dir		${localedir}
 ])

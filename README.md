@@ -1,13 +1,18 @@
-# Refocus-it
+# GIMP3-Refocus-it
 
 - Introduction
+- Using GIMP3-Refocus-It
 - Examples
-- News
-- Author
+- Simple Restoration
+- Restoration With Noise Reduction
+- Restoration With Area Smoothing
+- Installation Method
+- Version History
+
 
 ## Introduction
 
-The gimp-refocus-it plug-in [GIMP](http://www.gimp.org/), released under the
+The gimp3-refocus-it plug-in [GIMP](http://www.gimp.org/), released under the
 [GNU General Public License (GPL)](COPYING), can be used to refocus images
 acquired by a defocused camera, blurred by gaussian or motion blur or any
 combination of these.
@@ -23,6 +28,12 @@ and CPU requirements.
 The algorithm is based on finding the minimum of the error function using the
 Hopfield Neural Network.
 
+
+## Using GIMP3-Refocus-It
+
+This GIMP3 plug-in can be accessed via the menu 'Filters->Enhance->Refocus-it'
+
+
 ## Examples
 
 This is a snapshot of text document acquired by a defocused camera. The blur
@@ -30,7 +41,8 @@ radius is about 6.5 (determined by a try / error method).
 
 ![](img/defocus.jpg)
 
-## Simple restoration
+
+## Simple Restoration
 
 The first restored image shows result of restoration with following parameters:
 
@@ -46,7 +58,8 @@ The first restored image shows result of restoration with following parameters:
 
 Notice the amplified noise in the restored image.
 
-## Restoration with noise reduction
+
+## Restoration With Noise Reduction
 
 The second image was restored using these parameters:
 
@@ -63,7 +76,8 @@ The second image was restored using these parameters:
 
 Notice that the amplified noise has been partially removed.
 
-## Restoration with area smoothing
+
+## Restoration With Area Smoothing
 
 The last snapshot shows result of restoration with parameters:
 
@@ -83,7 +97,8 @@ The last snapshot shows result of restoration with parameters:
 Notice the benefit of adaptive area smoothing. The noise has almost disapeared
 from the smooth areas.
 
-## Installation method
+
+## Installation Method
 
 Installing from Git master requires 2 preparatory steps:
 
@@ -124,17 +139,18 @@ make
 make install
 ```
 
-## News
+## Version History
 
+GIMP3-Refocus-it
+- 3.0 (2026feb28) Upgraded Refocus-It to run on GIMP3. If you are using GIMP2, then use version 2.2 (select tag2.2 or use source code here [gimp2-refocus-it](https://github.com/JoesCat/gimp-refocus-it)).
+
+GIMP2-Refocus-it
 - 2.2 (2025apr08) Converted refocus-it to use gimp-2.10 API. Help converted to summary pop-up message format since no http docs exist. Fixed a copy-paste error introduced in 2.1 concerning mirror/period calculations. Found and fixed a minvar bug in lambda.c and also noted and swapped two sets of (minvar-maxvar) to (maxvar-minvar) calculations.
 - 2.1 (2025feb20) Imported refocus-it from sourceforge to github. Replaced intltool with gettext, upgraded build to autoconf 2.69, removed xmalloc and used standard malloc instead. Removed several extras such as inline and float options in anticipation of building for gimp3 plugin. This still builds for gimp2. If you need cmd-line tools, please revert to using version 2.0.0 which still contains original cmd-line build. Removed micro-version value - this leaves micro open for distros if they need/want it.
 - 2.0.0 (2004jul20) refocus-it plugin for GIMP-2.0 released. This version is internationalized and includes a command-line version of refocus-it suitable for processing PNM files in batch mode. The command-line version is also easily portable to non-GNU platforms.
 - 1.0.2 (2003jun19) First public release.
 
-## Authors
 
-This plug-in was written by Lukas Kunc in 2003..2004.
-
-Note: The Original Web page content, pictures, and files were located here https://refocus-it.sourceforge.net/ for versions 1.0.2 & 2.0.0
-
-Recent versions 2.1, 2.2 updates and patching by Joe da Silva in 2024..2025.
+Note: The Original Web page content and pictures are copyrighted (c) 2003..2004
+by Lukas Kunc for versions 1.0.2 & 2.0.0 (original site located here https://refocus-it.sourceforge.net/).
+Recent updates and patching for versions 2.1, 2.2, 3.0 by Joe da Silva in 2024..2026. License updated to GPL3+.

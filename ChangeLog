@@ -1,7 +1,12 @@
-  NOTE: This is now a GIMP3 binary, and needs more work for gimp-3.x
+NOTE: Version 3.0 and higher run on GIMP3 binary.
+
+2026-02-28 (3.0)  Joe Da Silva <digital@joescat.com>
+  * Converted plugin for GIMP-3.x, if you need code for gimp-2.x then
+    use tag2.2 or go to https://github.com/JoesCat/gimp-refocus-it
+
+NOTE: The versions below are for GIMP-2.10 or older
 
 2025-04-08 (2.2)  Joe Da Silva <digital@joescat.com>
-
   * Converted deprecated gimp-2.0 code to use gimp-2.10 API, which is
     same/similar to API used for gimp3 (TODO). Image pixel crunching
     is now done in linear space regardless of if image encoding is in
@@ -22,7 +27,6 @@
   NOTE: This is still a GIMP2 binary, and builds okay on gimp-2.10
 
 2025-02-20 (2.1)  Joe Da Silva <digital@joescat.com>
-
   * Replaced deprecated INTLTOOL with GETTEXT
   * Updated configure.ac and Makefile.am from 2.54 to 2.69
   * Removed xmalloc code - We should avoid doing exit() here.
@@ -46,29 +50,24 @@
   NOTE: This is still a GIMP2 binary, and builds okay on gimp-2.10
 
 2004-06-16 (2.0.0) Lukas Kunc  <lukas.kunc@seznam.cz>
-
   * Second public release - version 2.0.0 for GIMP 2.0
   * cmd-line/: Added command-line version for users not having GIMP
     Use refocus-it-cmd --help for more information.
   * po/*: Internationalized
 
 2004-06-15 (prerelease)  gettextize  <bug-gnu-gettext@gnu.org>
-
   * Makefile.am (SUBDIRS): New variable.
     (ACLOCAL_AMFLAGS): New variable.
     (EXTRA_DIST): Add config.rpath.
   * configure.in (AC_OUTPUT): Add po/Makefile.in,
 
 2003-07-19 (1.0.2) Lukas Kunc  <lukas.kunc@seznam.cz>
-
   * First public release - version 1.0.2 (on sourceforge).
 
 2003-05-23  Lukas Kunc  <lukas.kunc@seznam.cz>
-
   * This is the first public release (0.0.1) of the refocus plug-in.
 
 2003-05-28  Lukas Kunc  <lukas.kunc@seznam.cz>
-
   * Makefile.msc: Makefile for Microsoft Visual C++ added.
   * blur.c: Added support for motion and gaussian blur,
             improved support for defocus blur.

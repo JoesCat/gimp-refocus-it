@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2026 Joe Da Silva <digital@joescat.com> -->
+<component type="addon">
+  <id>org.gimp.extension.refocus-it3.metainfo.xml</id>
+  <extends>org.gimp.GIMP</extends>
+  <name>Refocus-It</name>
+  <summary>[GIMP3 plug-in to help refocus an image acquired by a defocused camera]</summary>
+  <url type="homepage">https://github.com/JoesCat/gimp3-refocus-it</url>
+  <url type="help">https://github.com/JoesCat/gimp3-refocus-it#README.md</url>
+  <url type="bugtracker">https://github.com/JoesCat/gimp3-refocus-it/issues</url>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0+</project_license>
+  <releases>
+   <release version="3.0" date="2026-02-28" />
+  </releases>
+  <requires>
+   <id version="3.0" compare="ge">org.gimp.GIMP</id>
+  </requires>
+  <metadata>
+   <value key="GIMP::plug-in-path">refocus-it</value>
+  </metadata>
+</component>

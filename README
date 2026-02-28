@@ -13,9 +13,9 @@ and CPU requirements.
 
 This plug-in has a preview that helps you select the best parameters.
 
-This version of the plug-in requires gimp-3.0.x or newer.
-Select tag release 2.2 if you require gimp-2.10.3x, which you can access from
-here: https://github.com/JoesCat/gimp-refocus-it/releases
+This version of the plug-in requires gimp-3.0 or newer.
+Select tag release 2.2 if you require gimp-2.10.3x, or go here:
+https://github.com/JoesCat/gimp-refocus-it/releases
 
 ---
 INSTALLATION
