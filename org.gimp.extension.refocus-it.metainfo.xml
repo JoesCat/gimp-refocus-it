@@ -1,10 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Copyright 2026 Joe Da Silva <digital@joescat.com> -->
 <component type="addon">
-  <id>org.gimp.extension.refocus-it3.metainfo.xml</id>
+  <id>org.gimp.extension.refocus-it.metainfo.xml</id>
   <extends>org.gimp.GIMP</extends>
   <name>Refocus-It</name>
   <summary>[GIMP3 plug-in to help refocus an image acquired by a defocused camera]</summary>
+  <description>
+    <p xml:lang="C">
+    The Iterative Refocus plug-in can help sharpen images acquired by a
+    defocused camera, blurred with gaussian or motion blur or any combination
+    of these degradations. In cases of severe blur it might produce better
+    results than plug-ins such as sharpen or unsharp mask.
+    Calculations are currently limited to GRAY8 (or RGB24/RGBA32) resolutions.
+    </p>
+  </description>
   <url type="homepage">https://github.com/JoesCat/gimp3-refocus-it</url>
   <url type="help">https://github.com/JoesCat/gimp3-refocus-it#README.md</url>
   <url type="bugtracker">https://github.com/JoesCat/gimp3-refocus-it/issues</url>

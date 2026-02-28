@@ -174,7 +174,7 @@ fi
 DATADIR='${datadir}/${PLUGIN_NAME}'
 AC_SUBST(DATADIR)
 
-CPPFLAGS="${CPPFLAGS} AS_ESCAPE([-I${top_builddir}]) AS_ESCAPE([-I${top_srcdir}])"
+CPPFLAGS="${CPPFLAGS} AS_ESCAPE([-I${top_builddir}]) AS_ESCAPE([-I${top_srcdir}]) AS_ESCAPE([-I${top_srcdir}/src/])"
 AC_SUBST([CPPFLAGS],["${CPPFLAGS}"])
 
 #--------------------------------------------------------------------------
