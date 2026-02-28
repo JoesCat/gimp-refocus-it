@@ -31,16 +31,26 @@
 #include "image.h"
 #include "lambda.h"
 #include "blur.h"
+
 #ifdef HAVE_GETTEXT
 //#include "gettext.h"
 #include <libintl.h>
 #include <locale.h>
-#endif
-
 #define _(String) gettext (String)
 #define gettext_noop(String) String
 #define d_(String) String
-#define N_(String) gettext_noop (String)
+#ifdef gettext_noop
+#    define N_(String) gettext_noop (String)
+#else
+#    define N_(String) (String)
+#endif
+#else
+/* No i18n for now */
+#define _(String) String
+#define gettext_noop(String) String
+#define d_(String) String
+#define N_(String) String
+#endif
 
 #define PREVIEW_SIZE		128
 #define MOTION_ANGLE_DRA_SIZE	80
@@ -197,6 +207,8 @@ static const char PLUG_IN_LONG_DESC[] = d_(
   "NOT nice features are memory and CPU requirements.\n\n"
   "Refocus-it is based on finding the minimum error using the "
   "Hopfield neural network.");
+static const char BOUNDARY_TEXT_MIRROR[] = d_("mirror boundary");
+static const char BOUNDARY__TEXT_PERIODICAL[] = d_("periodical boundary");
 
 /* FORWARD DECLARATIONS */
 
@@ -533,8 +545,8 @@ static void dialog_parameters_create () {
   g_signal_connect (G_OBJECT (dialog_parameters.hscroll), "value_changed", G_CALLBACK (preview_scroll_callback), NULL);
   g_signal_connect (G_OBJECT (dialog_parameters.vscroll), "value_changed", G_CALLBACK (preview_scroll_callback), NULL);
 
-  boundary_listbox[BOUNDARY_MIRROR].name = _("mirror boundary");
-  boundary_listbox[BOUNDARY_PERIODICAL].name = _("periodical boundary");
+  boundary_listbox[BOUNDARY_MIRROR].name = _(BOUNDARY_TEXT_MIRROR);
+  boundary_listbox[BOUNDARY_PERIODICAL].name = _(BOUNDARY__TEXT_PERIODICAL);
   boundary_listbox[BOUNDARY_LAST].name = NULL;
 }
 
@@ -839,7 +851,7 @@ static void preview_update () {
   g_object_unref (pixbuf);
 
   gtk_widget_queue_draw (preview.preview);
-  gdk_flush ();
+  gdk_display_flush (gdk_display_get_default ());
 }
 
 /* GUI ELEMENTS */
@@ -1075,7 +1087,7 @@ static void motion_angle_draw (gboolean complete_redraw) {
 
     gdk_draw_line (dialog_elements.motion_angle_dra->window, dialog_elements.motion_angle_dra->style->white_gc,
                    MOTION_ANGLE_DRA_MIDDLE, MOTION_ANGLE_DRA_MIDDLE, ox, oy);
-    gdk_displays_flush ();
+    gdk_display_flush (gdk_display_get_default ());
 */  }
 }
 
@@ -1608,7 +1620,7 @@ refocusit_run (GimpProcedure       *procedure,
     if (dialog ()) {
 //      input_parameters_save ();
     }
-    gimp_displays_flush ();
+    gdk_display_flush (gdk_display_get_default ());
     break;
 
   case GIMP_RUN_NONINTERACTIVE:
@@ -1626,7 +1638,7 @@ refocusit_run (GimpProcedure       *procedure,
     //input_parameters_load ();
     gimp_ui_init (PLUG_IN_BINARY);
     compute (input_parameters.iterations);
-    gimp_displays_flush ();
+    gdk_display_flush (gdk_display_get_default ());
     break;
 
   default:
@@ -1646,5 +1658,7 @@ refocusit_run (GimpProcedure       *procedure,
 }
 
 static void refocusit_help (const gchar *help_id, gpointer help_data) {
-  gimp_message(_(PLUG_IN_LONG_DESC));
+  gchar *longdesc = g_strdup_printf (_(PLUG_IN_LONG_DESC));
+  gimp_message(_(longdesc));
+  g_free (longdesc);
 }
