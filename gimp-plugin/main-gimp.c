@@ -119,7 +119,7 @@ typedef struct {
   guint          sel_width;
   guint          sel_height;
   gint           img_bpp;
-  guint          size;
+  size_t         size;
   gboolean       gray;
   gboolean       rgb;
   GimpDrawable  *drawable;
@@ -239,10 +239,7 @@ static void input_parameters_reset ();
 //static void input_parameters_save ();
 static void input_parameters_fetch_params (GimpProcedureConfig *proc_config);
 static void input_parameters_fetch_dlg();
-static int  image_parameters_init (GimpDrawable *drawable);
-static void image_parameters_destroy ();
 static int  hopfield_data_init ();
-static void hopfield_data_destroy ();
 static void hopfield_data_load ();
 static void hopfield_data_save ();
 static void preview_parameters_init ();
@@ -595,30 +592,6 @@ static void dialog_response (GtkWidget *widget, gint response_id, gpointer data)
   }
 }
 
-static int image_parameters_init (GimpDrawable *drawable) {
-  image_parameters.drawable   = drawable;
-  image_parameters.format     = gimp_drawable_get_format (drawable);
-  image_parameters.rgb        = gimp_drawable_is_rgb (drawable);
-  image_parameters.gray       = gimp_drawable_is_gray (drawable);
-  if (!(image_parameters.rgb || image_parameters.gray))
-    return -1;
-
-  image_parameters.sel_width  = gimp_drawable_get_width (drawable);
-  image_parameters.sel_height = gimp_drawable_get_height (drawable);
-  image_parameters.img_bpp    = gimp_drawable_get_bpp (drawable);
-  image_parameters.size       = image_parameters.sel_width * image_parameters.sel_height;
-
-  preview.data = NULL;
-  preview.linear = NULL;
-  return 0;
-}
-
-static void image_parameters_destroy () {
-  //gimp_drawable_detach (image_parameters.drawable);
-  if (preview.data)   g_free(preview.data);
-  if (preview.linear) g_free(preview.linear);
-}
-
 static void preview_parameters_init () {
   const char *str, *ret;
 
@@ -714,17 +687,6 @@ hopfield_data_init_err0:
   printf ("Error, hopfield_data_init() - out of memory!\n");
 #endif
   return -1;
-}
-
-static void hopfield_data_destroy () {
-  if (image_parameters.rgb) {
-    image_destroy (&hopfield.imageB);
-    image_destroy (&hopfield.imageG);
-  }
-  image_destroy (&hopfield.imageR);
-
-  g_free (image_parameters.destImg);
-  g_free (image_parameters.srcImg);
 }
 
 static void hopfield_data_save () {
@@ -1158,12 +1120,10 @@ static GtkWidget *preview_create () {
   gtk_widget_show (element);
 
   scrollbar = gtk_scrollbar_new (GTK_ORIENTATION_HORIZONTAL, GTK_ADJUSTMENT (dialog_parameters.hscroll));
-//unnecessary in gtk2 gtk_range_set_update_policy (GTK_RANGE (scrollbar), GTK_UPDATE_ALWAYS);
   gtk_grid_attach (GTK_GRID (grid), scrollbar, 0, 1, 1, 1);
   gtk_widget_show (scrollbar);
 
   scrollbar = gtk_scrollbar_new (GTK_ORIENTATION_VERTICAL, GTK_ADJUSTMENT (dialog_parameters.vscroll));
-//unnecessary in gtk2 gtk_range_set_update_policy (GTK_RANGE (scrollbar), GTK_UPDATE_ALWAYS);
   gtk_grid_attach (GTK_GRID (grid), scrollbar, 1, 0, 1, 1);
   gtk_widget_show (scrollbar);
 
@@ -1173,7 +1133,6 @@ static GtkWidget *preview_create () {
   /* iterations */
   hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 2);
   element = gtk_label_new (_("Iterations:"));
-//  gtk_misc_set_alignment (GTK_MISC (element), 1.0, 1.0);
   gtk_box_pack_start (GTK_BOX (hbox), element, FALSE, FALSE, 0);
   gtk_widget_show (element);
 
@@ -1580,21 +1539,32 @@ refocusit_run (GimpProcedure       *procedure,
     g_set_error (&error, GIMP_PLUG_IN_ERROR, 0,
                  _("Procedure '%s' only works with one drawable."),
                  PLUG_IN_PROC);
-
     return gimp_procedure_new_return_values (procedure,
                                              GIMP_PDB_CALLING_ERROR,
                                              error);
   }
+
   /* Initialize parameter data... */
-  if (image_parameters_init (drawables[0])) {
+  image_parameters.rgb        = gimp_drawable_is_rgb (drawables[0]);
+  image_parameters.gray       = gimp_drawable_is_gray (drawables[0]);
+  if (!(image_parameters.rgb || image_parameters.gray)) {
     g_set_error (&error, GIMP_PLUG_IN_ERROR, 0,
                  _("Procedure '%s' only works with RGB or GRAY images."),
                  PLUG_IN_PROC);
-
     return gimp_procedure_new_return_values (procedure,
                                              GIMP_PDB_CALLING_ERROR,
                                              error);
   }
+  image_parameters.drawable   = drawables[0];
+  image_parameters.format     = gimp_drawable_get_format (drawables[0]);
+  image_parameters.sel_width  = gimp_drawable_get_width (drawables[0]);
+  image_parameters.sel_height = gimp_drawable_get_height (drawables[0]);
+  image_parameters.img_bpp    = gimp_drawable_get_bpp (drawables[0]);
+  image_parameters.size       = (size_t)(image_parameters.sel_width * image_parameters.sel_height);
+
+  preview.data = NULL;
+  preview.linear = NULL;
+
   input_parameters_reset ();
 
   /* Load image data... */
@@ -1647,8 +1617,17 @@ refocusit_run (GimpProcedure       *procedure,
   };
 
   /* Detach from the drawable... */
-  hopfield_data_destroy ();
-  image_parameters_destroy ();
+  if (image_parameters.rgb) {
+    image_destroy (&hopfield.imageB);
+    image_destroy (&hopfield.imageG);
+  }
+  image_destroy (&hopfield.imageR);
+
+  if (image_parameters.destImg) g_free (image_parameters.destImg);
+  if (image_parameters.srcImg)  g_free (image_parameters.srcImg);
+
+  if (preview.data)   g_free(preview.data);
+  if (preview.linear) g_free(preview.linear);
 
   gegl_exit();
 #if defined(NDEBUG)
